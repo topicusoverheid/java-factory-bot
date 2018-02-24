@@ -1,4 +1,7 @@
 package nl.topicus.overheid.javafactorybot
 
-class AbstractModelFactoryTest {
+import spock.lang.Specification
+
+class AbstractModelFactoryTest extends Specification {
+
 }

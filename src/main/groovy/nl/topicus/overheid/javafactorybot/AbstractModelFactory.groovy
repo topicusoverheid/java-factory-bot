@@ -11,6 +11,7 @@ import java.lang.reflect.ParameterizedType
  * @param < M >
  */
 abstract class AbstractModelFactory<M> {
+
     /**
      * A Faker instance which can be used to generate random model properties.
      *
@@ -60,6 +61,26 @@ abstract class AbstractModelFactory<M> {
      */
     Map<String, Closure> getDefaultRelations() {
         [:]
+    }
+
+    Map<String, Closure> getFields(){
+        [:]
+    }
+
+    static Closure attribute(Closure defaultGenerator){
+        return defaultGenerator
+    }
+
+    static Closure hasOne(AbstractModelFactory factory){
+        return {buildParameters -> factory.build(buildParameters)}
+    }
+
+    static Closure belongsTo(AbstractModelFactory factory){
+        return {buildParameters -> factory.build(buildParameters)}
+    }
+
+    static Closure hasMany(AbstractModelFactory factory, int amount){
+        return {buildParameters -> factory.buildList(amount, buildParameters)}
     }
 
     /**
