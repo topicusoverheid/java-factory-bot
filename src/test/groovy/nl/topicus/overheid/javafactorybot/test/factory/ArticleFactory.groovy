@@ -12,6 +12,6 @@ class ArticleFactory extends AbstractModelFactory<Article> {
             content     : attribute { faker.lorem().paragraphs(3) },
             creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) },
             author      : hasOne(UserFactory.instance),
-            comments    : hasMany(CommentFactory.instance),
+            comments    : hasMany(CommentFactory.instance, 3),
     ]
 }

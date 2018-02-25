@@ -12,6 +12,8 @@ import java.lang.reflect.ParameterizedType
  */
 abstract class AbstractModelFactory<M> {
 
+    static class NOTHING {}
+
     /**
      * A Faker instance which can be used to generate random model properties.
      *
@@ -63,24 +65,71 @@ abstract class AbstractModelFactory<M> {
         [:]
     }
 
-    Map<String, Closure> getFields(){
+    Map<String, Closure> getFields() {
         [:]
     }
 
-    static Closure attribute(Closure defaultGenerator){
-        return defaultGenerator
+    static Closure attribute(Closure defaultValueGenerator) {
+        // If a value is given, use that one; otherwise call the default value generator
+        return { Object... arguments -> arguments.length == 0 ? defaultValueGenerator() : arguments[0] }
     }
 
-    static Closure hasOne(AbstractModelFactory factory){
-        return {buildParameters -> factory.build(buildParameters)}
+    static <R> Closure hasOne(AbstractModelFactory<R> factory) {
+        // This is the same as creating an object with no default attributes
+        return hasOne(factory, [:])
     }
 
-    static Closure belongsTo(AbstractModelFactory factory){
-        return {buildParameters -> factory.build(buildParameters)}
+    static <R> Closure hasOne(AbstractModelFactory<R> factory, Map defaultAttributes) {
+        return { Object... arguments ->
+            def buildParameter = arguments.length == 0 ? [:] : arguments[0]
+            if (buildParameter instanceof Map) {
+                factory.build(defaultAttributes + buildParameter)
+            } else {
+                // buildParameters is either null or an instance of the object
+                factory.build((R) buildParameter)
+            }
+        }
     }
 
-    static Closure hasMany(AbstractModelFactory factory, int amount){
-        return {buildParameters -> factory.buildList(amount, buildParameters)}
+    static <R> Closure hasOne(AbstractModelFactory<R> factory, R defaultObject) {
+        return { Object... arguments ->
+            if (arguments.length == 0) {
+                // No build parameters are given, so we use the default object
+                defaultObject
+            } else {
+                // Some build parameters are given, behave as if there are no default attributes
+                hasOne(factory)(arguments[0])
+            }
+        }
+    }
+
+    static <R> Closure belongsTo(AbstractModelFactory<R> factory) {
+        hasOne(factory)
+    }
+
+    static <R> Closure belongsTo(AbstractModelFactory<R> factory, Map defaultAttributes) {
+        hasOne(factory, defaultAttributes)
+    }
+
+    static <R> Closure belongsTo(AbstractModelFactory<R> factory, R defaultObject) {
+        hasOne(factory, defaultObject)
+    }
+
+    static Closure hasMany(AbstractModelFactory factory, int defaultAmount) {
+        return { Object... arguments ->
+            def buildParameter = arguments.length == 0 ? [:] : arguments[0]
+
+            if (buildParameter instanceof List) {
+                // For each element in the list, build a new object
+                factory.buildList(buildParameter)
+            } else if (buildParameter instanceof Integer) {
+                // Build the given amount of object
+                factory.buildList(buildParameter)
+            } else {
+                // Use arguments to build the default amount of objects
+                factory.buildList(defaultAmount, buildParameter as Map)
+            }
+        }
     }
 
     /**
@@ -233,13 +282,12 @@ abstract class AbstractModelFactory<M> {
      * @return A map of attributes which can be used to create a new instance.
      */
     Map attributes(Map buildParameters) {
-        def attributes = [:]
-        // Bepaal attributen van het object. Gebruik de buildParameter als deze gegeven is, anders de default attribute.
-        (getDefaultAttributes() + buildParameters).each(
-            { key, value -> attributes[key] = value instanceof Closure ? value() : value }
-        )
-        // Als er default relations gedefinieerd zijn, gebruik deze dan. Geef hierbij eventuele overrides uit de build parameters mee.
-        getDefaultRelations().each({ name, factoryMethod -> attributes[name] = factoryMethod(buildParameters.containsKey(name) ? buildParameters[name] : [:]) })
+        def attributes = buildParameters
+
+        getFields().each { String name, Closure factoryMethod ->
+            attributes[name] = buildParameters.containsKey(name) ? factoryMethod(buildParameters[name]) : factoryMethod()
+        }
+
         attributes
     }
 
