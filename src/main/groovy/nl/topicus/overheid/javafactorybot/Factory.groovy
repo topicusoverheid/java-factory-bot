@@ -1,6 +1,12 @@
 package nl.topicus.overheid.javafactorybot
 
 import com.github.javafaker.Faker
+import groovy.transform.stc.ClosureParams
+import groovy.transform.stc.SimpleType
+import nl.topicus.overheid.javafactorybot.definition.Association
+import nl.topicus.overheid.javafactorybot.definition.Attribute
+import nl.topicus.overheid.javafactorybot.definition.ManyAssociation
+import nl.topicus.overheid.javafactorybot.definition.ValueAttribute
 
 import java.lang.reflect.ParameterizedType
 
@@ -10,10 +16,7 @@ import java.lang.reflect.ParameterizedType
  *
  * @param < M >
  */
-abstract class AbstractModelFactory<M> {
-
-    static class NOTHING {}
-
+abstract class Factory<M> {
     /**
      * A Faker instance which can be used to generate random model properties.
      *
@@ -22,114 +25,63 @@ abstract class AbstractModelFactory<M> {
     protected final Faker faker = new Faker()
 
     /**
-     * Returns the type of the model which is created by this factory.
-     * @return The type of the model  which is created by this factory.
+     * Returns the type of the object which is created by this factory.
+     * @return The type of the object which is created by this factory.
      */
-    Class<M> getModelType() {
+    Class<M> getObjectType() {
         // Reflection magic to determine the type of the model
         // Based on https://stackoverflow.com/questions/1901164/get-type-of-a-generic-parameter-in-java-with-reflection
         try {
             ((ParameterizedType) this.class.genericSuperclass).actualTypeArguments[0] as Class<M>
         } catch (ClassCastException e) {
             // This exception explains better what you did wrong
-            throw new IllegalStateException("Model type of ${this.class.simpleName} could not be determined. Did you forget to add a type parameter to the factory?", e)
+            throw new IllegalStateException("Object type of ${this.class.simpleName} could not be determined. Did you forget to add a type parameter to the factory?", e)
         }
     }
 
     /**
-     * Mapping containing closures (factory methods) of default attributes for the model to create.
-     * To be used together with {@link #attributes}.
-     * Example:
-     * <pre>
-     * Map<String, Closure> defaultAttributes = [bar: {faker.name.firstName()}]
-     * </pre>
-     * Usage:
-     * <pre>
-     * Foo build(Map buildParameters = [:])
-     *{*     new Foo(attributes(buildParameters))
-     *}* </pre>
-     * This results in an instance of Foo with a property bar set to a randomized first name.
-     * @return A mapping containing default attributes for the model to create.
+     * Map containing {@link Attribute}s of this factory. An {@link Attribute} is a definition of an attribute in the
+     * (generated) object, and minimally implements a function which, given an instance of {@link Evaluator}, yields the
+     * value this attribute should have in the generated object.
+     * @return A map containing the {@link Attribute}s of this factory.
      */
-    Map<String, Closure> getDefaultAttributes() {
+    Map<String, Attribute> getAttributes() {
         [:]
     }
 
-    /**
-     * Mapping containing closures (factory methods) of default relations for the model to create.
-     * Each closure receives as argument the build parameters given for this relation.
-     * To be used together with {@link #attributes}.
-     * @return A mapping containing default attributes for the model to create.
-     */
-    Map<String, Closure> getDefaultRelations() {
-        [:]
+    static ValueAttribute attribute(
+            @DelegatesTo(Evaluator) @ClosureParams(value = SimpleType, options = "Evaluator") Closure defaultValueGenerator) {
+        new ValueAttribute(defaultValueGenerator)
     }
 
-    Map<String, Closure> getFields() {
-        [:]
+    static <T> Association<T> hasOne(Factory<T> factory) {
+        new Association<T>(factory)
     }
 
-    static Closure attribute(Closure defaultValueGenerator) {
-        // If a value is given, use that one; otherwise call the default value generator
-        return { Object... arguments -> arguments.length == 0 ? defaultValueGenerator() : arguments[0] }
+    static <T> Association<T> hasOne(Factory<T> factory, T defaultObject) {
+        new Association<T>(factory, defaultObject)
     }
 
-    static <R> Closure hasOne(AbstractModelFactory<R> factory) {
-        // This is the same as creating an object with no default attributes
-        return hasOne(factory, [:])
+    static <T> Association<T> hasOne(Factory<T> factory, Map<String, Object> overrides, List<String> traits = null) {
+        new Association<T>(factory, overrides, traits)
     }
 
-    static <R> Closure hasOne(AbstractModelFactory<R> factory, Map defaultAttributes) {
-        return { Object... arguments ->
-            def buildParameter = arguments.length == 0 ? [:] : arguments[0]
-            if (buildParameter instanceof Map) {
-                factory.build(defaultAttributes + buildParameter)
-            } else {
-                // buildParameters is either null or an instance of the object
-                factory.build((R) buildParameter)
-            }
-        }
+    // Special version for groovy syntax
+    static <T> Association<T> hasOne(Map<String, Object> overrides, Factory<T> factory, List<String> traits = null) {
+        new Association<T>(factory, overrides, traits)
     }
 
-    static <R> Closure hasOne(AbstractModelFactory<R> factory, R defaultObject) {
-        return { Object... arguments ->
-            if (arguments.length == 0) {
-                // No build parameters are given, so we use the default object
-                defaultObject
-            } else {
-                // Some build parameters are given, behave as if there are no default attributes
-                hasOne(factory)(arguments[0])
-            }
-        }
+    static <T> ManyAssociation<T> hasMany(Factory<T> factory, int amount, Map<String, Object> overrides = null, List<String> traits = null) {
+        new ManyAssociation<T>(factory, amount, overrides, traits)
     }
 
-    static <R> Closure belongsTo(AbstractModelFactory<R> factory) {
-        hasOne(factory)
+    // Special version for groovy syntax
+    static <T> ManyAssociation<T> hasMany(Map<String, Object> overrides, Factory<T> factory, int amount, List<String> traits = null) {
+        new ManyAssociation<T>(factory, amount, overrides, traits)
     }
 
-    static <R> Closure belongsTo(AbstractModelFactory<R> factory, Map defaultAttributes) {
-        hasOne(factory, defaultAttributes)
-    }
-
-    static <R> Closure belongsTo(AbstractModelFactory<R> factory, R defaultObject) {
-        hasOne(factory, defaultObject)
-    }
-
-    static Closure hasMany(AbstractModelFactory factory, int defaultAmount) {
-        return { Object... arguments ->
-            def buildParameter = arguments.length == 0 ? [:] : arguments[0]
-
-            if (buildParameter instanceof List) {
-                // For each element in the list, build a new object
-                factory.buildList(buildParameter)
-            } else if (buildParameter instanceof Integer) {
-                // Build the given amount of object
-                factory.buildList(buildParameter)
-            } else {
-                // Use arguments to build the default amount of objects
-                factory.buildList(defaultAmount, buildParameter as Map)
-            }
-        }
+    static <T> ManyAssociation<T> hasMany(Factory<T> factory, List<Object> defaultOverrides, List<String> traits = null) {
+        new ManyAssociation<T>(factory, defaultOverrides, traits)
     }
 
     /**
@@ -221,9 +173,7 @@ abstract class AbstractModelFactory<M> {
     List<M> buildList(int amount, Map buildParameters) {
         List<M> result = new ArrayList<>(amount)
 
-        for (int i = 0; i < amount; i++) {
-            result.add(buildParameters == null ? build() : build(buildParameters))
-        }
+        amount.times { result.add(buildParameters == null ? build() : build(buildParameters)) }
 
         result
     }
@@ -246,7 +196,7 @@ abstract class AbstractModelFactory<M> {
      * @return A model with the values from the given attributes
      */
     protected M internalBuild(Map attributes) {
-        getModelType().newInstance(attributes)
+        getObjectType().newInstance(attributes)
     }
 
     /**
@@ -262,7 +212,7 @@ abstract class AbstractModelFactory<M> {
 
     /**
      * Callback which is called after the model is completely build, just before it is returned by the build() method.
-     * By default, this methods calls {@link ModelFactoryContext#onBuildComplete(Object)} when a context is specified
+     * By default, this methods calls {@link FactoryContext#onBuildComplete(Object)} when a context is specified
      * by the {@link ModelFactoryManager}
      *
      * @param model The built model. Can be null
@@ -278,17 +228,12 @@ abstract class AbstractModelFactory<M> {
 
     /**
      * Returns a map of attributes and relations based on the specified default attribute, default relations and build parameters.
-     * @param buildParameters The build parameters specified to override default attributes and/or relations.
+     * @param overrides The build parameters specified to override default attributes and/or relations.
      * @return A map of attributes which can be used to create a new instance.
      */
-    Map attributes(Map buildParameters) {
-        def attributes = buildParameters
-
-        getFields().each { String name, Closure factoryMethod ->
-            attributes[name] = buildParameters.containsKey(name) ? factoryMethod(buildParameters[name]) : factoryMethod()
-        }
-
-        attributes
+    Map attributes(Map<String, Object> overrides) {
+        Evaluator evaluator = new Evaluator(this, overrides)
+        evaluator.attributes()
     }
 
     /**
@@ -323,7 +268,7 @@ abstract class AbstractModelFactory<M> {
      *
      * Example:
      * <pre>
-     * class UserFactory extends AbstractModelFactory
+     * class UserFactory extends Factory
      *     defaultRelations = [addresses: useOrBuildList(AdresFactory.instance, 3)]
      *     ...
      * }
@@ -342,7 +287,7 @@ abstract class AbstractModelFactory<M> {
      * @param defaultAmount The default amount of objects to create.
      * @return A list of objects created with the factory.
      */
-    static Closure<List> useOrBuildList(AbstractModelFactory factory, int defaultAmount) {
+    static Closure<List> useOrBuildList(Factory factory, int defaultAmount) {
         return { Object args ->
             if (args instanceof List) {
                 // For each element in the list, build a new model
@@ -369,7 +314,7 @@ abstract class AbstractModelFactory<M> {
      *
      * Example:
      * <pre>
-     * class UserFactory extends AbstractModelFactory
+     * class UserFactory extends Factory
      *    defaultRelations = [addresses: useOrBuildList(AdresFactory.instance, [[street: 'a', number: 10], [street: 'b']])]
      *    ...
      * }
@@ -388,7 +333,7 @@ abstract class AbstractModelFactory<M> {
      * @param defaultAmount The default amount of objects to create.
      * @return A list of objects created with the factory.
      */
-    static Closure<List> useOrBuildList(AbstractModelFactory factory, List defaultBuildParameters) {
+    static Closure<List> useOrBuildList(Factory factory, List defaultBuildParameters) {
         return { Object args ->
             if (args instanceof List) {
                 // A list of build parameters: use each list element to build a new object
@@ -406,3 +351,34 @@ abstract class AbstractModelFactory<M> {
         }
     }
 }
+//
+//class SimpleFactory {
+//    def methodMissing(String name, args) {
+//        println(name)
+//    }
+//
+//    /**
+//     * A Faker instance which can be used to generate random model properties.
+//     *
+//     * @link https://github.com/DiUS/java-faker
+//     */
+//    protected final Faker faker = new Faker()
+//
+//    def attr(String name, Closure defaultValueProvider = {}) {
+//        attribute(name, defaultValueProvider)
+//    }
+//
+//    def attribute(String name, Closure defaultValueProvider = {}) {
+//        println("attribute $name")
+//    }
+//
+//    def <T> void association(String name, Class<T> type) {
+//        println("association $name")
+//    }
+//
+//    // Test methode om meer als factory-bot te doen
+//    static <T> void factory(Class<T> type, @DelegatesTo(SimpleFactory) Closure block) {
+//        def factory = new SimpleFactory()
+//        factory.with block
+//    }
+//}

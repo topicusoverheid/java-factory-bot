@@ -12,5 +12,5 @@ class ModelFactoryManager {
     /**
      * The context which should be used by the factories.
      */
-    ModelFactoryContext currentContext = null
+    FactoryContext currentContext = null
 }

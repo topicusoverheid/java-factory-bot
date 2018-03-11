@@ -10,6 +10,8 @@
     <packaging>jar</packaging>
 
     <properties>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
         <gmavenplus-plugin.version>1.5</gmavenplus-plugin.version>
         <groovy.version>2.4.0</groovy.version>
         <javafaker.version>0.14</javafaker.version>

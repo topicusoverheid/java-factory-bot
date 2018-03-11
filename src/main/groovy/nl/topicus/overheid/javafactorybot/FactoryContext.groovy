@@ -7,7 +7,7 @@ package nl.topicus.overheid.javafactorybot
  * @author dennis
  * @since 04 Jan 2018
  */
-interface ModelFactoryContext {
+interface FactoryContext {
     /**
      * Called after a model is build (including all relations).
      * @param model The model which was build. Can be null.
