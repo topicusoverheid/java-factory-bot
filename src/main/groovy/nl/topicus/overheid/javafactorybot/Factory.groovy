@@ -42,6 +42,7 @@ abstract class Factory<M> implements FactoryHooks<M>, AttributesDsl {
      * Map containing {@link Attribute}s of this factory. An {@link Attribute} is a definition of an attribute in the
      * (generated) object, and minimally implements a function which, given an instance of {@link Evaluator}, yields the
      * value this attribute should have in the generated object.
+     *
      * @return A map containing the {@link Attribute}s of this factory.
      */
     Map<String, Attribute> getAttributes() {
@@ -50,7 +51,8 @@ abstract class Factory<M> implements FactoryHooks<M>, AttributesDsl {
 
     /**
      * Returns a map of attributes and relations based on the specified default attribute, default relations and build parameters.
-     * @param overrides The build parameters specified to override default attributes and/or relations.
+     *
+     * @param overrides The overrides specified to override default attributes and/or relations.
      * @return A map of attributes which can be used to create a new instance.
      */
     Map buildAttributes(Map<String, Object> overrides) {
@@ -62,13 +64,12 @@ abstract class Factory<M> implements FactoryHooks<M>, AttributesDsl {
      * Returns the passed object.
      * <p>
      * This method exists so it is possible to completely override a relation by passing your own instance, or null.
-     * @param buildParameters The custom instance of the object.
-     * @param skipHooks If true, the hooks ({@link #onAfterBuild} & {@link #onCreate}) are skipped.
-     * This is intended for nested calls by other build methods.
+     *
+     * @param object The custom instance of the object.
      * @return The passed object
      */
-    M build(M object, boolean skipHooks = false) {
-        skipHooks ? object : applyHooks(object)
+    M build(M object) {
+        applyHooks(object)
     }
 
     /**
@@ -76,6 +77,7 @@ abstract class Factory<M> implements FactoryHooks<M>, AttributesDsl {
      * <p>
      * In normal usage, this method should not be overriden. If you want to change how the object is built, use
      * {@link #onAfterBuild} or {@link #internalBuild}.
+     *
      * @return The new instance.
      */
     M build() {
@@ -88,14 +90,14 @@ abstract class Factory<M> implements FactoryHooks<M>, AttributesDsl {
      * In normal usage, this method should not be overriden. If you want to change how the object is built, use
      * {@link #onAfterBuild} or {@link #internalBuild}.
      *
-     * @param buildParameters Additional build parameters to use when building a new object.
+     * @param overrides Additional overrides to use when building a new object.
      * Build parameters allow to define custom values for attributes and relations.
      * @param traits A list of traits to apply to new object. A trait is basically a collection of attribute/relation
      * updates, meant to create an object representing a certain state. The possible traits are specified in the factory.
      * @return The new instance.
      */
-    M build(Map buildParameters, List<String> traits = null) {
-        M object = internalBuild(onAfterAttributes(buildAttributes(buildParameters)))
+    M build(Map<String, Object> overrides, List<String> traits = null) {
+        M object = internalBuild(onAfterAttributes(buildAttributes(overrides)))
         object = applyTraits(object, traits)
         applyHooks(object)
     }
@@ -112,38 +114,91 @@ abstract class Factory<M> implements FactoryHooks<M>, AttributesDsl {
     }
 
     /**
-     * Returns a list of new instances that are not saved.
+     * Returns the passed object, after it is saved.
+     * <p>
+     * This method exists so it is possible to completely override a relation by passing your own instance, or null.
      *
-     * @param amount The amount of instances to build.
-     * @return A list of new instances.
+     * @param object The custom instance of the object.
+     * @return The passed object, after is saved.
      */
-    List<M> buildList(int amount) {
-        return buildList(amount, null)
+    M create(M object) {
+        doInCreateContext { build(object) }
+    }
+
+    /**
+     * Returns a new instance that is saved.
+     * <p>
+     * In normal usage, this method should not be overriden. If you want to change how the object is built, use
+     * {@link #onAfterBuild} or {@link #internalBuild}.
+     *
+     * @return The new saved instance.
+     */
+    M create() {
+        doInCreateContext { build() }
+    }
+
+    /**
+     * Returns a new instance that is saved.
+     * <p>
+     * In normal usage, this method should not be overriden. If you want to change how the object is built, use
+     * {@link #onAfterBuild} or {@link #internalBuild}.
+     *
+     * @param overrides Additional overrides to use when building a new object.
+     * Build parameters allow to define custom values for attributes and relations.
+     * @param traits A list of traits to apply to new object. A trait is basically a collection of attribute/relation
+     * updates, meant to create an object representing a certain state. The possible traits are specified in the factory.
+     * @return The new saved instance.
+     */
+    M create(Map overrides, List<String> traits = null) {
+        doInCreateContext { build(overrides, traits) }
     }
 
     /**
      * Returns a list of new instances that are not saved.
      *
      * @param amount The amount of instances to build.
-     * @param buildParameters Additional build parameters to use when building a new object.
+     * @param overrides Additional overrides to use when building a new object.
      * @return As list of new instances.
      */
-    List<M> buildList(int amount, Map buildParameters) {
+    List<M> buildList(int amount, Map overrides = null) {
         List<M> result = new ArrayList<>(amount)
-        amount.times { result.add(buildParameters == null ? build() : build(buildParameters)) }
+        amount.times { result.add(overrides == null ? build() : build(overrides)) }
         result
     }
 
     /**
      * Returns a list of new instances that are not saved.
      *
-     * @param buildParameters A list of additional build parameters.
+     * @param overrides A list of additional overrides.
      * Each element in the list is applied to {@link #build}.
      * So the size of the result is the same as the amount of elements in this list.
      * @return As list of new instances.
      */
-    List<M> buildList(List buildParameters) {
-        buildParameters.collect({ (M) this.build(it) })
+    List<M> buildList(List overrides) {
+        overrides.collect({ (M) this.build(it) })
+    }
+
+    /**
+     * Returns a list of new instances that are saved.
+     *
+     * @param amount The amount of instances to build.
+     * @param overrides Additional overrides to use when building a new object.
+     * @return As list of new saved instances.
+     */
+    List<M> createList(int amount, Map overrides) {
+        doInCreateContext { buildList(amount, overrides) }
+    }
+
+    /**
+     * Returns a list of new instances that are saved.
+     *
+     * @param overrides A list of additional overrides.
+     * Each element in the list is applied to {@link #build}.
+     * So the size of the result is the same as the amount of elements in this list.
+     * @return As list of new saved instances.
+     */
+    List<M> createList(List overrides) {
+        doInCreateContext { buildList(overrides) }
     }
 
     /**
@@ -158,28 +213,25 @@ abstract class Factory<M> implements FactoryHooks<M>, AttributesDsl {
     }
 
     /**
-     * Apply all hooks ({@link #onAfterBuild(java.lang.Object)}, {@link #onCreate(java.lang.Object)} and
-     * {@link #onAfterCreate(java.lang.Object)}) to the given object.
-     * @param object The object to apply the hooks to.
-     * @return The object with the hooks applied.
-     */
-    private def applyHooks(M object) {
-        onAfterCreate(onCreate(onAfterBuild(object)))
-    }
-
-    /**
      * Callback which will persist the object, given the current context specifies the persist strategy. This method
      * is called after the object is completely build, just after {@link Factory#onAfterBuild(java.lang.Object)}.
      *
      * @param object The built object. Can be null
      * @return The persisted object.
      */
-    M onCreate(M object) {
+    protected M internalCreate(M object) {
         def context = FactoryManager.instance.currentContext
-        if (context != null) {
-            context.onCreate(object)
-        }
-        object
+        context == null ? object : onAfterCreate(context.persist(object))
+    }
+
+    /**
+     * Apply all hooks ({@link #onAfterBuild(java.lang.Object)}, {@link #internalCreate(java.lang.Object)} and
+     * {@link #onAfterCreate(java.lang.Object)}) to the given object.
+     * @param object The object to apply the hooks to.
+     * @return The object with the hooks applied.
+     */
+    protected def applyHooks(M object) {
+        internalCreate(onAfterBuild(object))
     }
 
     /**
@@ -210,5 +262,12 @@ abstract class Factory<M> implements FactoryHooks<M>, AttributesDsl {
         }
 
         object
+    }
+
+    private static <T> T doInCreateContext(Closure<T> closure) {
+        FactoryManager.instance.enableCreateContext()
+        def result = closure()
+        FactoryManager.instance.disableCreateContext()
+        result
     }
 }

@@ -18,4 +18,12 @@ class FactoryManager {
      * The context which should be used by the factories in the current execution.
      */
     FactoryContext currentContext = null
+
+    def enableCreateContext() {
+        currentContext = createContext
+    }
+
+    def disableCreateContext() {
+        currentContext = null
+    }
 }

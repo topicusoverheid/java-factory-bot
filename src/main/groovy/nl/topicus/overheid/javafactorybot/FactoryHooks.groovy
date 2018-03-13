@@ -23,8 +23,11 @@ trait FactoryHooks<M> {
     }
 
     /**
-     * Callback which is called after the model is created (built and saved) using the evaluated attributes, but before it is returned as
-     * result of the create() method. This allows to tweak the model, for example to fix relationships.
+     * Callback which is called after the model is created (built and saved) using the evaluated attributes,
+     * but before it is returned as result of the create() method. This allows to tweak the model,
+     * for example to fix relationships.
+     *
+     * This callback is only used when models are created using {@link Factory#create}
      *
      * @param model The model after it was created using the evaluated attributes. Can be null
      * @return The model with possible alterations
