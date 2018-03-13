@@ -6,7 +6,6 @@ import nl.topicus.overheid.javafactorybot.test.model.Comment
 
 import java.util.concurrent.TimeUnit
 
-
 @Singleton
 class CommentFactory extends Factory<Comment> {
     @Lazy Map<String, Attribute> attributes = [

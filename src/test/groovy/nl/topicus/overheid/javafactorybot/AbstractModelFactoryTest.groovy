@@ -12,7 +12,6 @@ class AbstractModelFactoryTest extends Specification {
 
     def "it fills the attributes when no build parameters are specified"() {
         when:
-//        def hm = Factory.hasMany(CommentFactory.instance, 3, article: null)
         Article article = ArticleFactory.instance.build()
 
         then:

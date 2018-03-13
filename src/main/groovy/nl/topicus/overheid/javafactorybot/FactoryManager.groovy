@@ -8,9 +8,14 @@ package nl.topicus.overheid.javafactorybot
  * @since 04 Jan 2018
  */
 @Singleton
-class ModelFactoryManager {
+class FactoryManager {
     /**
-     * The context which should be used by the factories.
+     * Context which should be used as the current context when {@link Factory#create} is used instead of {@link Factory#build}.
+     */
+    FactoryContext createContext = null
+
+    /**
+     * The context which should be used by the factories in the current execution.
      */
     FactoryContext currentContext = null
 }

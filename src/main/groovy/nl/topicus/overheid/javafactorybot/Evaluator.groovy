@@ -64,12 +64,4 @@ class Evaluator {
 
         return cache[name]
     }
-
-    def hasOverrideFor(String name) {
-        overrides.containsKey(name)
-    }
-
-    def getOverrideFor(String name) {
-        overrides[name]
-    }
 }

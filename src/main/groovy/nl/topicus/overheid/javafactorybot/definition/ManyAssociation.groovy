@@ -14,7 +14,6 @@ class ManyAssociation<T> implements Attribute {
     private Map<String, Object> defaultItemOverrides
     private List<Object> defaultOverrides
     private int amount
-    private T defaultObject
     private List<String> traits
 
     /**
