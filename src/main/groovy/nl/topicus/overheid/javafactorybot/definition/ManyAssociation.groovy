@@ -1,7 +1,8 @@
 package nl.topicus.overheid.javafactorybot.definition
 
+import com.github.javafaker.Faker
 import nl.topicus.overheid.javafactorybot.Evaluator
-import nl.topicus.overheid.javafactorybot.Factory
+import nl.topicus.overheid.javafactorybot.BaseFactory
 
 /**
  * Attribute used to define an association with a list of objects, using a factory.
@@ -10,7 +11,7 @@ import nl.topicus.overheid.javafactorybot.Factory
  * @param < T > The type of the associated object.
  */
 class ManyAssociation<T> implements Attribute {
-    private Factory factory
+    private BaseFactory factory
     private Map<String, Object> defaultItemOverrides
     private List<Object> defaultOverrides
     private int amount
@@ -22,7 +23,7 @@ class ManyAssociation<T> implements Attribute {
      * @param defaultOverrides Default overrides to pass to the factory. Can be overriden by user specified overrides.
      * @param traits List of traits to apply to the associated object.
      */
-    ManyAssociation(Factory<T> factory, int amount, Map<String, Object> defaultItemOverrides = null, List<String> traits = null) {
+    ManyAssociation(BaseFactory<T, ? extends Faker> factory, int amount, Map<String, Object> defaultItemOverrides = null, List<String> traits = null) {
         this.factory = factory
         this.amount = amount
         this.defaultItemOverrides = defaultItemOverrides
@@ -35,7 +36,7 @@ class ManyAssociation<T> implements Attribute {
      * @param defaultOverrides Default overrides to pass to the factory. Can be overriden by user specified overrides.
      * @param traits List of traits to apply to the associated object.
      */
-    ManyAssociation(Factory<T> factory, List<Object> defaultOverrides, List<String> traits = null) {
+    ManyAssociation(BaseFactory<T, ? extends Faker> factory, List<Object> defaultOverrides, List<String> traits = null) {
         this.factory = factory
         this.amount = defaultOverrides.size()
         this.defaultOverrides = defaultOverrides

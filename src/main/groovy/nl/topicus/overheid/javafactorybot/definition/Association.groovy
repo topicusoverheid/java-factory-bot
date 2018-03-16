@@ -1,7 +1,8 @@
 package nl.topicus.overheid.javafactorybot.definition
 
+import com.github.javafaker.Faker
 import nl.topicus.overheid.javafactorybot.Evaluator
-import nl.topicus.overheid.javafactorybot.Factory
+import nl.topicus.overheid.javafactorybot.BaseFactory
 
 /**
  * Attribute used to define an association with another object, using a factory. A combination of the default overrides,
@@ -9,7 +10,7 @@ import nl.topicus.overheid.javafactorybot.Factory
  * @param < T > The type of the associated object.
  */
 class Association<T> implements Attribute {
-    private Factory factory
+    private BaseFactory factory
     private Map<String, Object> defaultOverrides
     private boolean withDefaultObject = false
     private T defaultObject
@@ -21,7 +22,7 @@ class Association<T> implements Attribute {
      * @param defaultOverrides Default overrides to pass to the factory. Can be overriden by user specified overrides.
      * @param traits List of traits to apply to the associated object.
      */
-    Association(Factory<T> factory, Map<String, Object> defaultOverrides = null, List<String> traits = null) {
+    Association(BaseFactory<T, ? extends Faker> factory, Map<String, Object> defaultOverrides = null, List<String> traits = null) {
         this.defaultOverrides = defaultOverrides
         this.traits = traits
         this.factory = factory
@@ -32,7 +33,7 @@ class Association<T> implements Attribute {
      * @param factory The factory to use for the associated object.
      * @param defaultObject The default object to be used when no overrides are given.
      */
-    Association(Factory<T> factory, T defaultObject) {
+    Association(BaseFactory<T, ? extends Faker> factory, T defaultObject) {
         this.withDefaultObject = true
         this.defaultObject = defaultObject
         this.factory = factory

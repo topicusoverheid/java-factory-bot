@@ -6,11 +6,11 @@ import nl.topicus.overheid.javafactorybot.exception.EvaluationException
  * An evaluator takes a factory and the user specified overrides and yields the evaluated values of the attributes.
  */
 class Evaluator {
-    private Factory factory
+    private BaseFactory factory
     private Map<String, Object> overrides
     private Map<String, Object> cache
 
-    Evaluator(Factory factory, Map<String, Object> overrides) {
+    Evaluator(BaseFactory factory, Map<String, Object> overrides) {
         this.factory = factory
         this.overrides = overrides
         this.cache = new HashMap<>()
