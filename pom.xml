@@ -46,6 +46,7 @@
         <!-- Project settings -->
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compile.encoding>UTF-8</maven.compile.encoding>
 
         <!-- Dependency versions -->
         <gmavenplus-plugin.version>1.5</gmavenplus-plugin.version>
@@ -131,6 +132,15 @@
                         <version>${groovy-eclipse-batch.version}</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+
+            <!-- This plugin adds src/main/groovy as source directory.
+            See https://github.com/groovy/groovy-eclipse/wiki/Groovy-Eclipse-Maven-plugin#use-the-groovy-eclipse-compiler-mojo-for-configuring-source-folders -->
+            <plugin>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-eclipse-compiler</artifactId>
+                <version>${groovy-eclipse-compiler.version}</version>
+                <extensions>true</extensions>
             </plugin>
         </plugins>
     </build>
