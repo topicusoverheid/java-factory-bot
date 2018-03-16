@@ -250,7 +250,7 @@ abstract class Factory<M> implements FactoryHooks<M>, AttributesDsl {
     }
 
     M applyTraits(M object, List<String> traits) {
-        if (!traits.isEmpty()) {
+        if (traits != null && !traits.isEmpty()) {
             Map<String, Closure> availableTraits = getTraits()
             if (availableTraits == null) throw new TraitNotFoundException(this, traits[0])
             traits.forEach { String traitName ->

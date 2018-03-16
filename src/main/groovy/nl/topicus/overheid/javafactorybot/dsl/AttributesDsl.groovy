@@ -6,7 +6,7 @@ import nl.topicus.overheid.javafactorybot.Evaluator
 import nl.topicus.overheid.javafactorybot.Factory
 import nl.topicus.overheid.javafactorybot.definition.Association
 import nl.topicus.overheid.javafactorybot.definition.ManyAssociation
-import nl.topicus.overheid.javafactorybot.definition.ValueAttribute;
+import nl.topicus.overheid.javafactorybot.definition.ValueAttribute
 
 trait AttributesDsl {
     static ValueAttribute attribute(
