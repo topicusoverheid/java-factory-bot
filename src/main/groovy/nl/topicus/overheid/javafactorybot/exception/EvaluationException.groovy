@@ -4,6 +4,6 @@ import nl.topicus.overheid.javafactorybot.Evaluator
 
 class EvaluationException extends IllegalStateException {
     EvaluationException(Evaluator evaluator, String attributeName, Exception cause = null) {
-        super("Unable to evaluate attribute '$attributeName' for type ${evaluator.factory.objectType.name}: ${cause?.message}", cause)
+        super("Unable to evaluate attribute '$attributeName' for factory ${evaluator.factory.class.simpleName}: ${cause?.message}", cause)
     }
 }

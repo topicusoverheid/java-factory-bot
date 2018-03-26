@@ -9,36 +9,22 @@ class ArticleFactory extends Factory<Article> {
     def init() {
         attributes([
                 title       : attribute { faker.lorem().sentence() },
-                content     : attribute { faker.lorem().paragraphs(3) },
+                content     : attribute { faker.lorem().paragraph() },
                 creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) },
                 author      : hasOne(UserFactory),
                 comments    : hasMany(CommentFactory)
         ])
 
         // Hooks
-        after {
-            attributes { Map<String, Object> attrs ->
-                attrs.put("title", "foo")
-            }
-            build { Article article ->
-                article.comments.each { it.article = article }
-            }
-            create {
-
-            }
-        }
+        afterBuild { Article article -> article.comments.each { it.article = article } }
+        afterAttributes { Map<String, Object> attrs -> attrs.put("title", "foo") }
 
         // Traits
         this.trait "withComments", {
             attributes([
                     comments: hasMany(CommentFactory, 3, article: null as Article)
             ])
-            after {
-                build { Article article ->
-                    article.comments.each { it.article = article }
-                }
-            }
-
+            afterBuild { Article article -> article.comments.each { it.article = article } }
         }
     }
 }

@@ -12,7 +12,7 @@ class AbstractModelFactoryTest extends Specification {
 
     def "it fills the attributes when no build parameters are specified"() {
         when:
-        Article article = new ArticleFactory().build()
+        Article article = new ArticleFactory().build(['withComments'])
 
         then:
         article.title != null

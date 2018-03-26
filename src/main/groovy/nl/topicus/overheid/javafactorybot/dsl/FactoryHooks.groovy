@@ -3,9 +3,20 @@ package nl.topicus.overheid.javafactorybot.dsl
 import java.util.function.Consumer
 
 trait FactoryHooks<M> {
-    Consumer<Map<String, Object>> afterAttributesHook = { it }
-    Consumer<M> afterBuildHook = { it }
-    Consumer<M> afterCreateHook = { it }
+    /**
+     * Consumer which can be set instead of overriding {@link #onAfterAttributes(java.util.Map)}.
+     */
+    Consumer<Map<String, Object>> afterAttributes = {}
+
+    /**
+     * Consumer which can be set instead of overriding {@link #onAfterBuild(java.lang.Object)}.
+     */
+    Consumer<M> afterBuild = {}
+
+    /**
+     * Consumer which can be set instead of overriding {@link #onAfterCreate(java.lang.Object)}.
+     */
+    Consumer<M> afterCreate = {}
 
     /**
      * Callback which is called after the values of the attributes are evaluated, but before the object itself is built.
@@ -14,7 +25,7 @@ trait FactoryHooks<M> {
      * @return The attributes to use for creating the object
      */
     Map<String, Object> onAfterAttributes(Map<String, Object> attributes) {
-        afterAttributesHook.accept(attributes)
+        afterAttributes.accept(attributes)
         attributes
     }
 
@@ -26,7 +37,7 @@ trait FactoryHooks<M> {
      * @return The model with possible alterations
      */
     M onAfterBuild(M model) {
-        afterBuildHook.accept(model)
+        afterBuild.accept(model)
         model
     }
 
@@ -41,12 +52,19 @@ trait FactoryHooks<M> {
      * @return The model with possible alterations
      */
     M onAfterCreate(M model) {
-        afterCreateHook.accept(model)
+        afterCreate.accept(model)
         model
     }
 
-    def after(@DelegatesTo(HooksBuilderDsl) Closure closure) {
-        closure.delegate = new HooksBuilderDsl(this)
-        closure()
+    def afterAttributes(Consumer<Map<String, Object>> afterAttributes){
+        this.afterAttributes = afterAttributes
+    }
+
+    def afterBuild(Consumer<M> afterBuild){
+        this.afterBuild = afterBuild
+    }
+
+    def afterCreate(Consumer<M> afterCreate){
+        this.afterCreate = afterCreate
     }
 }

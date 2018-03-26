@@ -10,8 +10,10 @@ class Evaluator {
     private Map<String, Attribute> attributes
     private Map<String, Object> overrides
     private Map<String, Object> cache
+    private BaseFactory factory
 
-    Evaluator(Map<String, Attribute> attributes, Map<String, Object> overrides) {
+    Evaluator(BaseFactory factory, Map<String, Attribute> attributes, Map<String, Object> overrides) {
+        this.factory = factory
         this.attributes = attributes
         this.overrides = overrides
         this.cache = new HashMap<>()
