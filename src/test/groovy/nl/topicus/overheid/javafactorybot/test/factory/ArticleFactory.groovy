@@ -1,42 +1,44 @@
 package nl.topicus.overheid.javafactorybot.test.factory
 
 import nl.topicus.overheid.javafactorybot.Factory
-import nl.topicus.overheid.javafactorybot.definition.Attribute
 import nl.topicus.overheid.javafactorybot.test.model.Article
 
 import java.util.concurrent.TimeUnit
 
-@Singleton
 class ArticleFactory extends Factory<Article> {
-//    def definition(){
-//        a([
-//                title       : attribute { faker.lorem().sentence() },
-//                content     : attribute { faker.lorem().paragraphs(3) },
-//                creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) },
-//                author      : hasOne(UserFactory.instance, firstName: 'Jan'),
-//                comments    : hasMany(CommentFactory.instance, 3, article: null)
-//        ])
-//        after {
-//            build {
-//                def article = delegate
-//                comments.each{it.article = article}
-//            }
-//        }
-//    }
+    def init() {
+        attributes([
+                title       : attribute { faker.lorem().sentence() },
+                content     : attribute { faker.lorem().paragraphs(3) },
+                creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) },
+                author      : hasOne(UserFactory),
+                comments    : hasMany(CommentFactory)
+        ])
 
-    @Lazy Map<String, Attribute> attributes = [
-            title       : attribute { faker.lorem().sentence() },
-            content     : attribute { faker.lorem().paragraphs(3) },
-            creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) },
-            author      : hasOne(UserFactory.instance, firstName: 'Jan'),
-            comments    : hasMany(CommentFactory.instance, 3, article: null)
-    ]
+        // Hooks
+        after {
+            attributes { Map<String, Object> attrs ->
+                attrs.put("title", "foo")
+            }
+            build { Article article ->
+                article.comments.each { it.article = article }
+            }
+            create {
 
-    @Override
-    Article onAfterBuild(Article article) {
-		if(article != null){
-			article.comments.each {it.article = article}
-			article
-		}
+            }
+        }
+
+        // Traits
+        this.trait "withComments", {
+            attributes([
+                    comments: hasMany(CommentFactory, 3, article: null as Article)
+            ])
+            after {
+                build { Article article ->
+                    article.comments.each { it.article = article }
+                }
+            }
+
+        }
     }
 }

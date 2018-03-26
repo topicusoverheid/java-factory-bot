@@ -6,12 +6,13 @@ import nl.topicus.overheid.javafactorybot.test.model.Comment
 
 import java.util.concurrent.TimeUnit
 
-@Singleton
 class CommentFactory extends Factory<Comment> {
-    @Lazy Map<String, Attribute> attributes = [
-            article     : hasOne(ArticleFactory.instance),
-            author      : hasOne(UserFactory.instance),
-            content     : attribute { faker.lorem().paragraph() },
-            creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) }
-    ]
+    def init() {
+        attributes([
+                article     : hasOne(ArticleFactory),
+                author      : hasOne(UserFactory),
+                content     : attribute { faker.lorem().paragraph() },
+                creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) }
+        ])
+    }
 }

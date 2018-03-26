@@ -2,7 +2,7 @@ package nl.topicus.overheid.javafactorybot
 
 import com.github.javafaker.Faker
 import nl.topicus.overheid.javafactorybot.definition.Attribute
-import nl.topicus.overheid.javafactorybot.dsl.AttributesDsl
+import nl.topicus.overheid.javafactorybot.definition.Definition
 import nl.topicus.overheid.javafactorybot.exception.TraitNotFoundException
 
 import java.lang.reflect.ParameterizedType
@@ -11,16 +11,18 @@ import java.lang.reflect.ParameterizedType
  * A factory is a special class which is able to generate new valid objects, for testing purposes.
  * These objects can be randomized by using a faker.
  *
- * @param < M >   The type of the generated object
- * @param < F >   The type of the faker of this factory. This allows to override the faker with a custom implementation.
+ * @param < M >       The type of the generated object
+ * @param < F >       The type of the faker of this factory. This allows to override the faker with a custom implementation.
  */
-abstract class BaseFactory<M, F extends Faker> implements FactoryHooks<M>, AttributesDsl {
+abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     /**
      * A Faker instance which can be used to generate random attribute values.
      *
      * @link https://github.com/DiUS/java-faker
      */
     abstract F getFaker()
+
+    abstract def init()
 
     /**
      * Returns the type of the object which is created by this factory. By default, this method returns the type
@@ -40,25 +42,15 @@ abstract class BaseFactory<M, F extends Faker> implements FactoryHooks<M>, Attri
     }
 
     /**
-     * Map containing {@link Attribute}s of this factory. An {@link Attribute} is a definition of an attribute in the
-     * (generated) object, and minimally implements a function which, given an instance of {@link Evaluator}, yields the
-     * value this attribute should have in the generated object.
-     *
-     * @return A map containing the {@link Attribute}s of this factory.
-     */
-    Map<String, Attribute> getAttributes() {
-        [:]
-    }
-
-    /**
      * Returns a map of attributes and relations based on the specified default attribute, default relations and build parameters.
      *
      * @param overrides The overrides specified to override default attributes and/or relations.
+     * @param traits A list of traits to apply.
      * @return A map of attributes which can be used to create a new instance.
      */
-    Map buildAttributes(Map<String, Object> overrides) {
-        Evaluator evaluator = new Evaluator(this, overrides)
-        evaluator.attributes()
+    Map<String, Object> buildAttributes(Map<String, Object> overrides, List<String> traits = null) {
+        Evaluator evaluator = new Evaluator(compileAttributes(traits), overrides)
+        applyAfterAttributesHooks(evaluator.attributes())
     }
 
     /**
@@ -70,7 +62,7 @@ abstract class BaseFactory<M, F extends Faker> implements FactoryHooks<M>, Attri
      * @return The passed object
      */
     M build(M object) {
-        applyHooks(object)
+        createIfInContext(applyAfterBuildHooks(object))
     }
 
     /**
@@ -98,9 +90,8 @@ abstract class BaseFactory<M, F extends Faker> implements FactoryHooks<M>, Attri
      * @return The new instance.
      */
     M build(Map<String, Object> overrides, List<String> traits = null) {
-        M object = internalBuild(onAfterAttributes(buildAttributes(overrides)))
-        object = applyTraits(object, traits)
-        applyHooks(object)
+        M object = internalBuild(buildAttributes(overrides, traits))
+        createIfInContext(applyAfterBuildHooks(object, traits))
     }
 
     /**
@@ -218,51 +209,57 @@ abstract class BaseFactory<M, F extends Faker> implements FactoryHooks<M>, Attri
      * is called after the object is completely build, just after {@link BaseFactory#onAfterBuild(java.lang.Object)}.
      *
      * @param object The built object. Can be null
+     * @param context The context which should be used to persist the object.
      * @return The persisted object.
      */
-    protected M internalCreate(M object) {
+    protected M internalCreate(M object, FactoryContext context) {
+        if (object) context.persist(object) else object
+    }
+
+    private M createIfInContext(M object) {
         def context = FactoryManager.instance.currentContext
-        context == null ? object : onAfterCreate(context.persist(object))
+        context == null ? object : applyAfterCreateHooks(internalCreate(object, context))
     }
 
     /**
-     * Apply all hooks ({@link #onAfterBuild(java.lang.Object)}, {@link #internalCreate(java.lang.Object)} and
-     * {@link #onAfterCreate(java.lang.Object)}) to the given object.
-     * @param object The object to apply the hooks to.
-     * @return The object with the hooks applied.
-     */
-    protected def applyHooks(M object) {
-        internalCreate(onAfterBuild(object))
-    }
-
-    /**
-     * Returns a map containing possible traits for this factory. A trait is a collection of attributes and relations,
-     * meant to put the generated object in a certain state. A trait is identified by a name,
-     * while the trait itself is declared as a Closure over the generated object.
+     * Compile the list of traits into the base attributes
      *
-     * Traits are applied after the object is build from attributes, but before {@link #onAfterBuild(java.lang.Object)}
-     * is called.
-     *
-     * @return A map from trait name to trait function of possible traits for this factory.
-     * @see <a href="http://www.rubydoc.info/gems/factory_girl/file/GETTING_STARTED.md#Traits">Traits applied in ruby factories</a>
+     * @param traits List of traits to apply, can be null or empty.
+     * @return A map of attributes including attributes from the traits.
      */
-    @SuppressWarnings("GrMethodMayBeStatic")
-    protected Map<String, Closure> getTraits() {
-        null
-    }
-
-    M applyTraits(M object, List<String> traits) {
+    private Map<String, Attribute> compileAttributes(List<String> traits) {
         if (traits != null && !traits.isEmpty()) {
-            Map<String, Closure> availableTraits = getTraits()
-            if (availableTraits == null) throw new TraitNotFoundException(this, traits[0])
-            traits.forEach { String traitName ->
-                Closure traitClosure = availableTraits.get(traitName)
-                if (traitClosure == null) throw new TraitNotFoundException(this, traitName)
-                traitClosure.delegate = object
-                traitClosure(object)
-            }
+            traits.inject(attributes, { Map attributes, String traitName -> attributes + findTrait(traitName).attributes })
+        } else {
+            attributes
         }
+    }
 
+    private Definition<M> findTrait(String traitName) {
+        Map<String, Definition<M>> availableTraits = getTraits()
+        if (availableTraits == null) throw new TraitNotFoundException(this, traitName)
+
+        Definition<M> traitDefinition = availableTraits.get(traitName)
+        if (traitDefinition == null) throw new TraitNotFoundException(this, traitName)
+
+        traitDefinition
+    }
+
+    private Map<String, Object> applyAfterAttributesHooks(Map<String, Object> attributes, List<String> traits = null) {
+        onAfterAttributes(attributes)
+        if (traits) traits.each { findTrait(it).onAfterAttributes(attributes) }
+        attributes
+    }
+
+    private M applyAfterBuildHooks(M object, List<String> traits = null) {
+        onAfterBuild(object)
+        if (traits) traits.each { object = findTrait(it).onAfterBuild(object) }
+        object
+    }
+
+    private M applyAfterCreateHooks(M object, List<String> traits = null) {
+        onAfterCreate(object)
+        if (traits) traits.each { object = findTrait(it).onAfterCreate(object) }
         object
     }
 

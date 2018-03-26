@@ -10,6 +10,7 @@ import nl.topicus.overheid.javafactorybot.Evaluator
 interface Attribute {
     /**
      * Get the value of this attribute, possibly using the given evaluator.
+     *
      * @param evaluator The evaluator which can be used to determine the value of other attribute.
      * @return The value of this attribute.
      */
@@ -17,7 +18,10 @@ interface Attribute {
 
     /**
      * Get the value of this attribute using the given override, possibly using the given evaluator.
-     * @param override The override for this attribute, as given by the user
+     *
+     * @param override The override for this attribute, as given by the user. This can be intentionally null, for
+     * instance when the value of the attribute should be null. If no override is given {@link #evaluate(Evaluator)}
+     * is used instead.
      * @param evaluator The evaluator which can be used to determine the value of other attribute.
      * @return The value of this attribute.
      */

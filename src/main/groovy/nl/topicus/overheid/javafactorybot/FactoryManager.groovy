@@ -1,5 +1,7 @@
 package nl.topicus.overheid.javafactorybot
 
+import com.github.javafaker.Faker
+
 /**
  * Global manager for the factories which can be used to manage the factories. This manager is a singleton and can contain shared configuration
  * between factories.
@@ -19,11 +21,28 @@ class FactoryManager {
      */
     FactoryContext currentContext = null
 
-    def enableCreateContext() {
+    /**
+     * Enable the create context. This method is called when one of the {@link BaseFactory#create} methods is used. By
+     * setting the context only once, subsequent calls to {@link BaseFactory#build} which are part of the initial create
+     * action will also result in presistent relations.
+     */
+    void enableCreateContext() {
         currentContext = createContext
     }
 
-    def disableCreateContext() {
+    /**
+     * Disable the create context.
+     */
+    void disableCreateContext() {
         currentContext = null
+    }
+
+    private Map<Class<BaseFactory<?, ? extends Faker>>, ? extends BaseFactory<?, ? extends Faker>> factoryInstances = [:]
+
+    def <M, F extends Faker, T extends BaseFactory<M, F>> T getFactoryInstance(Class<T> factoryClass) {
+        if (!factoryInstances.containsKey(factoryClass)) {
+            factoryInstances.put(factoryClass, factoryClass.newInstance())
+        }
+        factoryInstances[factoryClass] as T
     }
 }

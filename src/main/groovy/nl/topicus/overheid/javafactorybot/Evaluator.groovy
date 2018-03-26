@@ -1,17 +1,18 @@
 package nl.topicus.overheid.javafactorybot
 
+import nl.topicus.overheid.javafactorybot.definition.Attribute
 import nl.topicus.overheid.javafactorybot.exception.EvaluationException
 
 /**
  * An evaluator takes a factory and the user specified overrides and yields the evaluated values of the attributes.
  */
 class Evaluator {
-    private BaseFactory factory
+    private Map<String, Attribute> attributes
     private Map<String, Object> overrides
     private Map<String, Object> cache
 
-    Evaluator(BaseFactory factory, Map<String, Object> overrides) {
-        this.factory = factory
+    Evaluator(Map<String, Attribute> attributes, Map<String, Object> overrides) {
+        this.attributes = attributes
         this.overrides = overrides
         this.cache = new HashMap<>()
     }
@@ -23,7 +24,7 @@ class Evaluator {
      */
     def attributes() {
         // Make sure cache is filled with values
-        (overrides.keySet() + factory.attributes.keySet()).each {
+        (overrides.keySet() + attributes.keySet()).each {
             // For each unevaluated value, evaluate the value
             if (!cache.containsKey(it)) {
                 evaluate(it)
@@ -38,7 +39,7 @@ class Evaluator {
      * @return The evaluated value.
      */
     private def evaluate(String name) {
-        def attribute = factory.attributes.get(name)
+        def attribute = attributes.get(name)
         if (attribute != null) {
             try {
                 cache[name] = overrides.containsKey(name) ? attribute.evaluate(overrides[name], this) : attribute.evaluate(this)

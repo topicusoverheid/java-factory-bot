@@ -12,7 +12,7 @@ class AbstractModelFactoryTest extends Specification {
 
     def "it fills the attributes when no build parameters are specified"() {
         when:
-        Article article = ArticleFactory.instance.build()
+        Article article = new ArticleFactory().build()
 
         then:
         article.title != null
@@ -29,7 +29,7 @@ class AbstractModelFactoryTest extends Specification {
 
     def "derp"() {
         expect:
-        def user = UserFactory.instance.build()
+        def user = new UserFactory().build()
         user
     }
 
