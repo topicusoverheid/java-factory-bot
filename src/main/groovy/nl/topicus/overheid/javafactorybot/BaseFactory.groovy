@@ -49,7 +49,8 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      * @return A map of attributes which can be used to create a new instance.
      */
     Map<String, Object> buildAttributes(Map<String, Object> overrides, List<String> traits = null) {
-        Evaluator evaluator = new Evaluator(compileAttributes(traits), overrides)
+        checkInitialize()
+        Evaluator evaluator = new Evaluator(this, compileAttributes(traits), overrides)
         applyAfterAttributesHooks(evaluator.attributes())
     }
 
@@ -62,6 +63,7 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      * @return The passed object
      */
     M build(M object) {
+        checkInitialize()
         createIfInContext(applyAfterBuildHooks(object))
     }
 
@@ -216,6 +218,18 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
         if (object) context.persist(object) else object
     }
 
+    // Private methods down here
+
+    private boolean initialized = false
+
+    private void checkInitialize(){
+        if(!initialized) init()
+        initialized = true
+    }
+
+    /**
+     * If create context is active, persist object. Otherwise, use unpersisted object.
+     */
     private M createIfInContext(M object) {
         def context = FactoryManager.instance.currentContext
         context == null ? object : applyAfterCreateHooks(internalCreate(object, context))
@@ -229,40 +243,53 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      */
     private Map<String, Attribute> compileAttributes(List<String> traits) {
         if (traits != null && !traits.isEmpty()) {
-            traits.inject(attributes, { Map attributes, String traitName -> attributes + findTrait(traitName).attributes })
+            traits.inject(attributes, { Map attributes, String traitName ->
+                attributes + this.findTrait(traitName).attributes
+            })
         } else {
             attributes
         }
     }
 
+    /**
+     * Find a trait by name, and throw an exception if a trait with that name does not exist.
+     */
     private Definition<M> findTrait(String traitName) {
-        Map<String, Definition<M>> availableTraits = getTraits()
-        if (availableTraits == null) throw new TraitNotFoundException(this, traitName)
-
-        Definition<M> traitDefinition = availableTraits.get(traitName)
+        Definition<M> traitDefinition = getTraits()?.get(traitName)
         if (traitDefinition == null) throw new TraitNotFoundException(this, traitName)
-
         traitDefinition
     }
 
+    /**
+     * Apply all 'afterAttributes' hooks from factory and possible traits.
+     */
     private Map<String, Object> applyAfterAttributesHooks(Map<String, Object> attributes, List<String> traits = null) {
         onAfterAttributes(attributes)
         if (traits) traits.each { findTrait(it).onAfterAttributes(attributes) }
         attributes
     }
 
+    /**
+     * Apply all 'afterBuild' hooks from factory and possible traits.
+     */
     private M applyAfterBuildHooks(M object, List<String> traits = null) {
         onAfterBuild(object)
         if (traits) traits.each { object = findTrait(it).onAfterBuild(object) }
         object
     }
 
+    /**
+     * Apply all 'afterCreate' hooks from factory and possible traits.
+     */
     private M applyAfterCreateHooks(M object, List<String> traits = null) {
         onAfterCreate(object)
         if (traits) traits.each { object = findTrait(it).onAfterCreate(object) }
         object
     }
 
+    /**
+     * Execute the given closure in create context and return the result.
+     */
     private static <T> T doInCreateContext(Closure<T> closure) {
         FactoryManager.instance.enableCreateContext()
         def result = closure()
