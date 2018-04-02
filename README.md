@@ -1,9 +1,14 @@
 # java-factory-bot
 
-A library for creating objects as test data. 
+[![Build Status](https://travis-ci.org/topicusoverheid/java-factory-bot.svg?branch=master)](https://travis-ci.org/topicusoverheid/java-factory-bot)
+
+A library for creating objects as test data, with support for persisting the objects in a database.
+
 Using factories, creating default sane test objects is simple, while individual attibutes can easily be tweaked.
 Combining these with [java-faker](https://github.com/DiUS/java-faker) allows to boost your tests, or seed your database
 for demo and testing purposes.
+
+This library is inspired by [factory_bot](https://github.com/thoughtbot/factory_bot), a popular gem for ruby.
 
 ## Example
 
