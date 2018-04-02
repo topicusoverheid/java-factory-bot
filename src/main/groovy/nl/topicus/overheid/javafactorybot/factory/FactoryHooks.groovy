@@ -1,4 +1,4 @@
-package nl.topicus.overheid.javafactorybot.dsl
+package nl.topicus.overheid.javafactorybot.factory
 
 import java.util.function.Consumer
 
@@ -22,11 +22,9 @@ trait FactoryHooks<M> {
      * Callback which is called after the values of the attributes are evaluated, but before the object itself is built.
      *
      * @param attributes The evaluated attributes
-     * @return The attributes to use for creating the object
      */
-    Map<String, Object> onAfterAttributes(Map<String, Object> attributes) {
+    void onAfterAttributes(Map<String, Object> attributes) {
         afterAttributes.accept(attributes)
-        attributes
     }
 
     /**
@@ -34,11 +32,9 @@ trait FactoryHooks<M> {
      * result of the build() method. This allows to tweak the model, for example to fix relationships.
      *
      * @param model The model after it was built using the evaluated attributes. Can be null
-     * @return The model with possible alterations
      */
-    M onAfterBuild(M model) {
+    void onAfterBuild(M model) {
         afterBuild.accept(model)
-        model
     }
 
     /**
@@ -49,22 +45,8 @@ trait FactoryHooks<M> {
      * This callback is only used when models are created using {@link nl.topicus.overheid.javafactorybot.BaseFactory#create}
      *
      * @param model The model after it was created using the evaluated attributes. Can be null
-     * @return The model with possible alterations
      */
-    M onAfterCreate(M model) {
+    void onAfterCreate(M model) {
         afterCreate.accept(model)
-        model
-    }
-
-    def afterAttributes(Consumer<Map<String, Object>> afterAttributes){
-        this.afterAttributes = afterAttributes
-    }
-
-    def afterBuild(Consumer<M> afterBuild){
-        this.afterBuild = afterBuild
-    }
-
-    def afterCreate(Consumer<M> afterCreate){
-        this.afterCreate = afterCreate
     }
 }

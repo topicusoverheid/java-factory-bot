@@ -22,8 +22,6 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      */
     abstract F getFaker()
 
-    abstract def init()
-
     /**
      * Returns the type of the object which is created by this factory. By default, this method returns the type
      * specified as generic type of this factory.
@@ -49,7 +47,6 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      * @return A map of attributes which can be used to create a new instance.
      */
     Map<String, Object> buildAttributes(Map<String, Object> overrides, List<String> traits = null) {
-        checkInitialize()
         Evaluator evaluator = new Evaluator(this, compileAttributes(traits), overrides)
         applyAfterAttributesHooks(evaluator.attributes())
     }
@@ -63,7 +60,6 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      * @return The passed object
      */
     M build(M object) {
-        checkInitialize()
         createIfInContext(applyAfterBuildHooks(object))
     }
 
@@ -220,13 +216,6 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
 
     // Private methods down here
 
-    private boolean initialized = false
-
-    private void checkInitialize(){
-        if(!initialized) init()
-        initialized = true
-    }
-
     /**
      * If create context is active, persist object. Otherwise, use unpersisted object.
      */
@@ -244,8 +233,8 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     private Map<String, Attribute> compileAttributes(List<String> traits) {
         if (traits != null && !traits.isEmpty()) {
             traits.inject(attributes, { Map attributes, String traitName ->
-                attributes + this.findTrait(traitName).attributes
-            })
+                attributes + findTrait(traitName).attributes
+            }) as Map<String, Attribute>
         } else {
             attributes
         }
@@ -254,7 +243,7 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     /**
      * Find a trait by name, and throw an exception if a trait with that name does not exist.
      */
-    private Definition<M> findTrait(String traitName) {
+    protected Definition<M> findTrait(String traitName) {
         Definition<M> traitDefinition = getTraits()?.get(traitName)
         if (traitDefinition == null) throw new TraitNotFoundException(this, traitName)
         traitDefinition
@@ -274,7 +263,7 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      */
     private M applyAfterBuildHooks(M object, List<String> traits = null) {
         onAfterBuild(object)
-        if (traits) traits.each { object = findTrait(it).onAfterBuild(object) }
+        if (traits) traits.each {  findTrait(it).onAfterBuild(object) }
         object
     }
 
@@ -283,7 +272,7 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      */
     private M applyAfterCreateHooks(M object, List<String> traits = null) {
         onAfterCreate(object)
-        if (traits) traits.each { object = findTrait(it).onAfterCreate(object) }
+        if (traits) traits.each { findTrait(it).onAfterCreate(object) }
         object
     }
 

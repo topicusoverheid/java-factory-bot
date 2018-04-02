@@ -1,30 +1,45 @@
 package nl.topicus.overheid.javafactorybot.test.factory
 
 import nl.topicus.overheid.javafactorybot.Factory
+import nl.topicus.overheid.javafactorybot.definition.Attribute
+import nl.topicus.overheid.javafactorybot.definition.Trait
 import nl.topicus.overheid.javafactorybot.test.model.Article
 
 import java.util.concurrent.TimeUnit
 
 class ArticleFactory extends Factory<Article> {
-    def init() {
-        attributes([
+    @Override
+    Map<String, Attribute> getAttributes() {
+        [
                 title       : attribute { faker.lorem().sentence() },
                 content     : attribute { faker.lorem().paragraph() },
                 creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) },
                 author      : hasOne(UserFactory),
                 comments    : hasMany(CommentFactory)
-        ])
+        ]
+    }
 
-        // Hooks
-        afterBuild { Article article -> article.comments.each { it.article = article } }
-        afterAttributes { Map<String, Object> attrs -> attrs.put("title", "foo") }
+    @Override
+    void onAfterBuild(Article article) {
+        article?.comments.each { it.article = article }
+    }
 
-        // Traits
-        this.trait "withComments", {
-            attributes([
-                    comments: hasMany(CommentFactory, 3, article: null as Article)
-            ])
-            afterBuild { Article article -> article.comments.each { it.article = article } }
-        }
+    @Override
+    void onAfterAttributes(Map<String, Object> attributes) {
+        attributes.put("title", "foo")
+    }
+
+    @Override
+    Map<String, Trait> getTraits() {
+        [
+                withComments: new Trait() {
+                    @Override
+                    Map<String, Attribute> getAttributes() {
+                        [
+                                comments: hasMany(CommentFactory, 3, article: null as Article)
+                        ]
+                    }
+                }
+        ]
     }
 }

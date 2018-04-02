@@ -1,4 +1,4 @@
-package nl.topicus.overheid.javafactorybot.dsl
+package nl.topicus.overheid.javafactorybot.factory
 
 import com.github.javafaker.Faker
 import groovy.transform.stc.ClosureParams
@@ -20,10 +20,6 @@ trait FactoryAttributes {
      * @return A map containing the {@link nl.topicus.overheid.javafactorybot.definition.Attribute}s of this factory.
      */
     Map<String, Attribute> attributes = [:]
-
-    def attributes(Map<String, Attribute> attributes) {
-        this.attributes = attributes
-    }
 
     /**
      * Creates a new attribute which either uses the user specified override or the result of the closure.

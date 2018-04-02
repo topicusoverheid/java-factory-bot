@@ -7,7 +7,7 @@ import nl.topicus.overheid.javafactorybot.Evaluator
  * attribute, taking into account the user specified override and evaluator. The evaluator can be used to determine
  * values of other attributes.
  */
-interface Attribute {
+interface Attribute extends GroovyObject {
     /**
      * Get the value of this attribute, possibly using the given evaluator.
      *

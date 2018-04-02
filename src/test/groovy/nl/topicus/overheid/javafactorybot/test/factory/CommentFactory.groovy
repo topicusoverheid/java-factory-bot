@@ -7,12 +7,13 @@ import nl.topicus.overheid.javafactorybot.test.model.Comment
 import java.util.concurrent.TimeUnit
 
 class CommentFactory extends Factory<Comment> {
-    def init() {
-        attributes([
+    @Override
+    Map<String, Attribute> getAttributes() {
+        [
                 article     : hasOne(ArticleFactory),
                 author      : hasOne(UserFactory),
                 content     : attribute { faker.lorem().paragraph() },
                 creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) }
-        ])
+        ]
     }
 }

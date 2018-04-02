@@ -1,8 +1,8 @@
 package nl.topicus.overheid.javafactorybot.definition
 
-import nl.topicus.overheid.javafactorybot.dsl.FactoryHooks
-import nl.topicus.overheid.javafactorybot.dsl.FactoryAttributes
-import nl.topicus.overheid.javafactorybot.dsl.FactoryTraits
+import nl.topicus.overheid.javafactorybot.factory.FactoryHooks
+import nl.topicus.overheid.javafactorybot.factory.FactoryAttributes
+import nl.topicus.overheid.javafactorybot.factory.FactoryTraits
 
 /**
  * A definition is the base class containing the definition of how an object should be created. This base is used by
