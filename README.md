@@ -2,10 +2,12 @@
 
 A library for creating objects as test data. 
 Using factories, creating default sane test objects is simple, while individual attibutes can easily be tweaked.
+Combining these with [java-faker](https://github.com/DiUS/java-faker) allows to boost your tests, or seed your database
+for demo and testing purposes.
 
 ## Example
 
-Given a model for an `Article` and a `User` (getters and setters are omitted): 
+Given a model for an `Article` and a `User` (getters and setters are omitted):
 
 ```java
 @Data
@@ -25,7 +27,7 @@ public class User {
 }
 ```
 
-we can define factories like these:
+we can define factories like
 
 ```groovy
 class ArticleFactory extends Factory<Article> {

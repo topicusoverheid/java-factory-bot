@@ -60,7 +60,22 @@
 
         <!-- Plugin versions -->
         <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
+        <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
+        <groovydoc-maven-plugin.version>2.1</groovydoc-maven-plugin.version>
+        <nexus-staging-maven-plugin.version>1.6.7</nexus-staging-maven-plugin.version>
+        <maven-pgp-plugin.version>1.5</maven-pgp-plugin.version>
     </properties>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <dependencyManagement>
         <dependencies>
@@ -145,4 +160,74 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>release</id>
+            <build>
+               <plugins>
+                   <!-- Generate source jar -->
+                   <plugin>
+                       <groupId>org.apache.maven.plugins</groupId>
+                       <artifactId>maven-source-plugin</artifactId>
+                       <version>${maven-source-plugin.version}</version>
+                       <executions>
+                           <execution>
+                               <id>attach-sources</id>
+                               <phase>verify</phase>
+                               <goals>
+                                   <goal>jar-no-fork</goal>
+                               </goals>
+                           </execution>
+                       </executions>
+                   </plugin>
+
+                   <!-- Generate javadoc -->
+                   <plugin>
+                       <groupId>com.bluetrainsoftware.maven</groupId>
+                       <artifactId>groovydoc-maven-plugin</artifactId>
+                       <version>${groovydoc-maven-plugin.version}</version>
+                       <executions>
+                           <execution>
+                               <id>attach-docs</id>
+                               <phase>package</phase>
+                               <goals>
+                                   <goal>attach-docs</goal>
+                               </goals>
+                           </execution>
+                       </executions>
+                   </plugin>
+
+                   <!-- Deployment to maven central -->
+                   <plugin>
+                       <groupId>org.sonatype.plugins</groupId>
+                       <artifactId>nexus-staging-maven-plugin</artifactId>
+                       <version>${nexus-staging-maven-plugin.version}</version>
+                       <extensions>true</extensions>
+                       <configuration>
+                           <serverId>ossrh</serverId>
+                           <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                           <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                       </configuration>
+                   </plugin>
+
+                   <!-- Signing of all files, required for maven central -->
+                   <plugin>
+                       <groupId>org.apache.maven.plugins</groupId>
+                       <artifactId>maven-gpg-plugin</artifactId>
+                       <version>${maven-pgp-plugin.version}</version>
+                       <executions>
+                           <execution>
+                               <id>sign-artifacts</id>
+                               <phase>verify</phase>
+                               <goals>
+                                   <goal>sign</goal>
+                               </goals>
+                           </execution>
+                       </executions>
+                   </plugin>
+               </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
