@@ -11,6 +11,8 @@ public class Article {
     private String title;
     private String content;
     private Date creationDate;
+    private String slug;
+    private String summary;
 
     // Relations
     private User author;

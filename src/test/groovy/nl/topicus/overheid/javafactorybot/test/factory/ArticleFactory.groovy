@@ -14,6 +14,7 @@ class ArticleFactory extends Factory<Article> {
                 title       : attribute { faker.lorem().sentence() },
                 content     : attribute { faker.lorem().paragraph() },
                 creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) },
+                summary     : attribute { null },
                 author      : hasOne(UserFactory),
                 comments    : hasMany(CommentFactory)
         ]
@@ -22,11 +23,6 @@ class ArticleFactory extends Factory<Article> {
     @Override
     void onAfterBuild(Article article) {
         article?.comments.each { it.article = article }
-    }
-
-    @Override
-    void onAfterAttributes(Map<String, Object> attributes) {
-        attributes.put("title", "foo")
     }
 
     @Override
