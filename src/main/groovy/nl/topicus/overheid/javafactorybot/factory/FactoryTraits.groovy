@@ -8,7 +8,7 @@ trait FactoryTraits<M> {
      * meant to put the generated object in a certain state. A trait is identified by a name,
      * while the trait itself is declared as a Closure over the generated object.
      *
-     * Traits are applied after the object is build from attributes, but before {@link #onAfterBuild(java.lang.Object)}
+     * Traits are applied after the object is build from attributes, but before {@link FactoryHooks#onAfterBuild(java.lang.Object)}
      * is called.
      *
      * @return A map from trait name to trait function of possible traits for this factory.
