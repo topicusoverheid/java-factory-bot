@@ -11,8 +11,8 @@ import java.lang.reflect.ParameterizedType
  * A factory is a special class which is able to generate new valid objects, for testing purposes.
  * These objects can be randomized by using a faker.
  *
- * @param < M >       The type of the generated object
- * @param < F >       The type of the faker of this factory. This allows to override the faker with a custom implementation.
+ * @param < M >          The type of the generated object
+ * @param < F >          The type of the faker of this factory. This allows to override the faker with a custom implementation.
  */
 abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     /**
@@ -94,6 +94,9 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
 
     /**
      * Returns a new instance that is not saved.
+     * <p>
+     * In normal usage, this method should not be overriden. If you want to change how the object is built, use
+     * {@link #onAfterBuild} or {@link #internalBuild}.
      *
      * @param traits A list of traits to apply to new object. A trait is basically a collection of attribute/relation
      * updates, meant to create an object representing a certain state. The possible traits are specified in the factory.
@@ -104,9 +107,26 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     }
 
     /**
+     * Returns a new instance that is not saved.
+     * <p>
+     * In normal usage, this method should not be overriden. If you want to change how the object is built, use
+     * {@link #onAfterBuild} or {@link #internalBuild}.
+     *
+     * @param traits An array of traits to apply to new object. A trait is basically a collection of attribute/relation
+     * updates, meant to create an object representing a certain state. The possible traits are specified in the factory.
+     * @return The new instance.
+     */
+    M build(String... traits) {
+        build([:], traits.toList())
+    }
+
+    /**
      * Returns the passed object, after it is saved.
      * <p>
      * This method exists so it is possible to completely override a relation by passing your own instance, or null.
+     * <p>
+     * To persist the object, the current context (@link FactoryManager#currentContext} is temporarily set to {@link FactoryManager#createContext}.
+     * This context specifies the strategy to use to persist the object.
      *
      * @param object The custom instance of the object.
      * @return The passed object, after is saved.
@@ -118,8 +138,8 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     /**
      * Returns a new instance that is saved.
      * <p>
-     * In normal usage, this method should not be overriden. If you want to change how the object is built, use
-     * {@link #onAfterBuild} or {@link #internalBuild}.
+     * To persist the object, the current context (@link FactoryManager#currentContext} is temporarily set to {@link FactoryManager#createContext}.
+     * This context specifies the strategy to use to persist the object.
      *
      * @return The new saved instance.
      */
@@ -130,8 +150,8 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     /**
      * Returns a new instance that is saved.
      * <p>
-     * In normal usage, this method should not be overriden. If you want to change how the object is built, use
-     * {@link #onAfterBuild} or {@link #internalBuild}.
+     * To persist the object, the current context (@link FactoryManager#currentContext} is temporarily set to {@link FactoryManager#createContext}.
+     * This context specifies the strategy to use to persist the object..
      *
      * @param overrides Additional overrides to use when building a new object.
      * Build parameters allow to define custom values for attributes and relations.
@@ -141,6 +161,34 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      */
     M create(Map overrides, List<String> traits = null) {
         doInCreateContext { build(overrides, traits) }
+    }
+
+    /**
+     * Returns a new instance that is saved.
+     * <p>
+     * To persist the object, the current context (@link FactoryManager#currentContext} is temporarily set to {@link FactoryManager#createContext}.
+     * This context specifies the strategy to use to persist the object..
+     *
+     * @param traits A list of traits to apply to new object. A trait is basically a collection of attribute/relation
+     * updates, meant to create an object representing a certain state. The possible traits are specified in the factory.
+     * @return The new saved instance.
+     */
+    M create(List<String> traits) {
+        doInCreateContext { build(traits) }
+    }
+
+    /**
+     * Returns a new instance that is saved.
+     * <p>
+     * To persist the object, the current context (@link FactoryManager#currentContext} is temporarily set to {@link FactoryManager#createContext}.
+     * This context specifies the strategy to use to persist the object..
+     *
+     * @param traits An array of traits to apply to new object. A trait is basically a collection of attribute/relation
+     * updates, meant to create an object representing a certain state. The possible traits are specified in the factory.
+     * @return The new saved instance.
+     */
+    M create(String... traits) {
+        doInCreateContext { build(traits) }
     }
 
     /**
@@ -263,7 +311,7 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      */
     private M applyAfterBuildHooks(M object, List<String> traits = null) {
         onAfterBuild(object)
-        if (traits) traits.each {  findTrait(it).onAfterBuild(object) }
+        if (traits) traits.each { findTrait(it).onAfterBuild(object) }
         object
     }
 
