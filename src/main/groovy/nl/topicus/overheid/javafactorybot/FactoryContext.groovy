@@ -11,7 +11,11 @@ package nl.topicus.overheid.javafactorybot
 interface FactoryContext {
     /**
      * Called when an object is build and should be persisted.
-     * @param object The object which was build. Can be null.
+     * <p>
+     * This method will only be called when the object is non-null.
+     *
+     * @param object The object which was build.
+     * @param The persisted object
      */
-    void persist(Object object)
+    def <M> M persist(M object)
 }

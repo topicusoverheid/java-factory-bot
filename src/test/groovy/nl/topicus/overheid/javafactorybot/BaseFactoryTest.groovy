@@ -49,4 +49,32 @@ class BaseFactoryTest extends Specification {
         article.comments != null
         article.comments.size() == 0
     }
+
+    def "when creating the create context is used"() {
+        given:
+        FactoryContext createContext = Mock(FactoryContext)
+        FactoryManager.instance.createContext = createContext
+
+        when:
+        Article article = new ArticleFactory().create()
+
+        then:
+        1 * createContext.persist(_ as User) >> { User a -> a }
+        1 * createContext.persist(_ as Article) >> { Article a -> a }
+        article != null
+
+        then: "defined attributes with default are filled"
+        article.title != null
+        article.content != null
+        article.creationDate != null
+
+        and: "defined attributes with default null are null"
+        article.summary == null
+
+        and: "relations are set"
+        article.author != null
+        article.author instanceof User
+        article.comments != null
+        article.comments.size() == 0
+    }
 }
