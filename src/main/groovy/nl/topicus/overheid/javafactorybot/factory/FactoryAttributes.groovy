@@ -47,39 +47,39 @@ trait FactoryAttributes {
         new Association<>(factory, defaultObject)
     }
 
-    def <T> Association<T> hasOne(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, Map<String, Object> overrides, List<String> traits = null) {
+    def <T> Association<T> hasOne(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, Map<String, ? extends Object> overrides, List<String> traits = null) {
         hasOne(FactoryManager.instance.getFactoryInstance(factoryClass), overrides, traits)
     }
 
-    def <T> Association<T> hasOne(BaseFactory<T, ? extends Faker> factory, Map<String, Object> overrides, List<String> traits = null) {
+    def <T> Association<T> hasOne(BaseFactory<T, ? extends Faker> factory, Map<String, ? extends Object> overrides, List<String> traits = null) {
         new Association<>(factory, overrides, traits)
     }
 
     // Special version for groovy syntax
-    def <T> Association<T> hasOne(Map<String, Object> overrides, Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, List<String> traits = null) {
+    def <T> Association<T> hasOne(Map<String, ? extends Object> overrides, Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, List<String> traits = null) {
         hasOne(factoryClass, overrides, traits)
     }
 
     // Special version for groovy syntax
-    def <T> Association<T> hasOne(Map<String, Object> overrides, BaseFactory<T, ? extends Faker> factory, List<String> traits = null) {
+    def <T> Association<T> hasOne(Map<String, ? extends Object> overrides, BaseFactory<T, ? extends Faker> factory, List<String> traits = null) {
         hasOne(factory, overrides, traits)
     }
 
-    def <T> ManyAssociation<T> hasMany(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, int amount = 0, Map<String, Object> overrides = null, List<String> traits = null) {
+    def <T> ManyAssociation<T> hasMany(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, int amount = 0, Map<String, ? extends Object> overrides = null, List<String> traits = null) {
         hasMany(FactoryManager.instance.getFactoryInstance(factoryClass), amount, overrides, traits)
     }
 
-    def <T> ManyAssociation<T> hasMany(BaseFactory<T, ? extends Faker> factory, int amount = 0, Map<String, Object> overrides = null, List<String> traits = null) {
+    def <T> ManyAssociation<T> hasMany(BaseFactory<T, ? extends Faker> factory, int amount = 0, Map<String, ? extends Object> overrides = null, List<String> traits = null) {
         new ManyAssociation<>(factory, amount, overrides, traits)
     }
 
     // Special version for groovy syntax
-    def <T> ManyAssociation<T> hasMany(Map<String, Object> overrides, Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, int amount = 0, List<String> traits = null) {
+    def <T> ManyAssociation<T> hasMany(Map<String, ? extends Object> overrides, Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, int amount = 0, List<String> traits = null) {
         hasMany(factoryClass, amount, overrides, traits)
     }
 
     // Special version for groovy syntax
-    def <T> ManyAssociation<T> hasMany(Map<String, Object> overrides, BaseFactory<T, ? extends Faker> factory, int amount = 0, List<String> traits = null) {
+    def <T> ManyAssociation<T> hasMany(Map<String, ? extends Object> overrides, BaseFactory<T, ? extends Faker> factory, int amount = 0, List<String> traits = null) {
         hasMany(factory, amount, overrides, traits)
     }
 
