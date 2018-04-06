@@ -163,70 +163,76 @@
 
     <profiles>
         <profile>
+            <id>source</id>
+            <build>
+                <plugins>
+                    <!-- Generate source jar -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>${maven-source-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>jar-no-fork</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Generate javadoc -->
+                    <plugin>
+                        <groupId>com.bluetrainsoftware.maven</groupId>
+                        <artifactId>groovydoc-maven-plugin</artifactId>
+                        <version>${groovydoc-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>attach-docs</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>attach-docs</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
             <id>release</id>
             <build>
-               <plugins>
-                   <!-- Generate source jar -->
-                   <plugin>
-                       <groupId>org.apache.maven.plugins</groupId>
-                       <artifactId>maven-source-plugin</artifactId>
-                       <version>${maven-source-plugin.version}</version>
-                       <executions>
-                           <execution>
-                               <id>attach-sources</id>
-                               <phase>verify</phase>
-                               <goals>
-                                   <goal>jar-no-fork</goal>
-                               </goals>
-                           </execution>
-                       </executions>
-                   </plugin>
+                <plugins>
+                    <!-- Deployment to maven central -->
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>${nexus-staging-maven-plugin.version}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
 
-                   <!-- Generate javadoc -->
-                   <plugin>
-                       <groupId>com.bluetrainsoftware.maven</groupId>
-                       <artifactId>groovydoc-maven-plugin</artifactId>
-                       <version>${groovydoc-maven-plugin.version}</version>
-                       <executions>
-                           <execution>
-                               <id>attach-docs</id>
-                               <phase>package</phase>
-                               <goals>
-                                   <goal>attach-docs</goal>
-                               </goals>
-                           </execution>
-                       </executions>
-                   </plugin>
-
-                   <!-- Deployment to maven central -->
-                   <plugin>
-                       <groupId>org.sonatype.plugins</groupId>
-                       <artifactId>nexus-staging-maven-plugin</artifactId>
-                       <version>${nexus-staging-maven-plugin.version}</version>
-                       <extensions>true</extensions>
-                       <configuration>
-                           <serverId>ossrh</serverId>
-                           <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                           <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                       </configuration>
-                   </plugin>
-
-                   <!-- Signing of all files, required for maven central -->
-                   <plugin>
-                       <groupId>org.apache.maven.plugins</groupId>
-                       <artifactId>maven-gpg-plugin</artifactId>
-                       <version>${maven-gpg-plugin.version}</version>
-                       <executions>
-                           <execution>
-                               <id>sign-artifacts</id>
-                               <phase>verify</phase>
-                               <goals>
-                                   <goal>sign</goal>
-                               </goals>
-                           </execution>
-                       </executions>
-                   </plugin>
-               </plugins>
+                    <!-- Signing of all files, required for maven central -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven-gpg-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
             </build>
         </profile>
     </profiles>
