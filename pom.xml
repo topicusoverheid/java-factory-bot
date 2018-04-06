@@ -6,7 +6,7 @@
 
     <groupId>nl.topicus.overheid</groupId>
     <artifactId>java-factory-bot</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
 
     <name>java-factory-bot</name>
