@@ -63,7 +63,7 @@
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
         <groovydoc-maven-plugin.version>2.1</groovydoc-maven-plugin.version>
         <nexus-staging-maven-plugin.version>1.6.7</nexus-staging-maven-plugin.version>
-        <maven-pgp-plugin.version>1.5</maven-pgp-plugin.version>
+        <maven-gpg-plugin.version>1.5</maven-gpg-plugin.version>
     </properties>
 
     <distributionManagement>
@@ -215,7 +215,7 @@
                    <plugin>
                        <groupId>org.apache.maven.plugins</groupId>
                        <artifactId>maven-gpg-plugin</artifactId>
-                       <version>${maven-pgp-plugin.version}</version>
+                       <version>${maven-gpg-plugin.version}</version>
                        <executions>
                            <execution>
                                <id>sign-artifacts</id>
