@@ -55,6 +55,10 @@ trait FactoryAttributes {
         new Association<>(factory, overrides, traits)
     }
 
+    def <T> Association<T> hasOne(BaseFactory<T, ? extends Faker> factory, List<String> traits) {
+        hasOne(factory, [:], traits)
+    }
+
     // Special version for groovy syntax
     def <T> Association<T> hasOne(Map<String, ? extends Object> overrides, Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, List<String> traits = null) {
         hasOne(factoryClass, overrides, traits)

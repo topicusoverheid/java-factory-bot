@@ -11,8 +11,8 @@ import java.lang.reflect.ParameterizedType
  * A factory is a special class which is able to generate new valid objects, for testing purposes.
  * These objects can be randomized by using a faker.
  *
- * @param < M >          The type of the generated object
- * @param < F >          The type of the faker of this factory. This allows to override the faker with a custom implementation.
+ * @param < M >           The type of the generated object
+ * @param < F >           The type of the faker of this factory. This allows to override the faker with a custom implementation.
  */
 abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     /**
@@ -60,7 +60,13 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      * @return The passed object
      */
     M build(M object) {
-        createIfInContext(applyAfterBuildHooks(object))
+        // This check is required. When creating an empty map in groovy, it does not conform to the type Map<String, Object>. Due to this, the
+        // map is passed to this method. To handle this situation, the correct method is used when a map is given.
+        if (object instanceof Map) {
+            build(object as Map, [])
+        } else {
+            createIfInContext(applyAfterBuildHooks(object))
+        }
     }
 
     /**
