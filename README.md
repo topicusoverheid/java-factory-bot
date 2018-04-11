@@ -36,8 +36,7 @@ we can define factories like
 
 ```groovy
 class ArticleFactory extends Factory<Article> {
-    @Override
-    Map<String, Attribute> getAttributes() {
+    Map<String, Attribute> attributes =
         [
                 title       : attribute { faker.lorem().sentence() },
                 content     : attribute { faker.lorem().paragraph() },
@@ -48,8 +47,7 @@ class ArticleFactory extends Factory<Article> {
 }
 
 class UserFactory extends Factory<User> {
-    @Override
-    Map<String, Attribute> getAttributes() {
+    Map<String, Attribute> attributes =
         [
                 username : attribute { faker.name().username() },
                 firstName: attribute { faker.name().firstName() },
@@ -73,11 +71,9 @@ by passing them in a map:
 Article article = new ArticleFactory().build([title: "Foo", user: [username: "johndoe"]])
 ```
 
-~~For documentation, view the wiki.~~ TODO
+For documentation, view the [wiki](https://github.com/topicusoverheid/java-factory-bot/wiki).
 
 ## Installation
-
-**Note:** java-factory-bot is not yet available on maven central. If you which to use it, please consider cloning an building locally.
 
 ### Maven
 
@@ -99,6 +95,18 @@ Add the following line to the dependency section of `build.gradle`
 ## Building
 
 Execute `./mvnw install` to build and test the library.
+
+### Source and javadoc
+
+To generate jars containing the source and javadoc, enable the `source` profile. Example:
+
+    ./mvnw install -P source
+
+### Deploy
+
+To deploy the library to maven central, enable the `release` and `source` profiles and perform the `deploy` goal:
+
+    ./mvnw clean install deploy -P source -P release
 
 ## Licence
 
