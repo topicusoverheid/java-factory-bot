@@ -36,25 +36,21 @@ we can define factories like
 
 ```groovy
 class ArticleFactory extends Factory<Article> {
-    Map<String, Attribute> attributes =
-        [
-                title       : attribute { faker.lorem().sentence() },
-                content     : attribute { faker.lorem().paragraph() },
-                creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) },
-                author      : hasOne(UserFactory)
-        ]
-    }
+    Map<String, Attribute> attributes = [
+            title       : attribute { faker.lorem().sentence() },
+            content     : attribute { faker.lorem().paragraph() },
+            creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) },
+            author      : hasOne(UserFactory)
+    ]
 }
 
 class UserFactory extends Factory<User> {
-    Map<String, Attribute> attributes =
-        [
-                username : attribute { faker.name().username() },
-                firstName: attribute { faker.name().firstName() },
-                lastName : attribute { faker.name().lastName() },
-                email    : attribute { "${get("firstName")}.${get("lastName")}@example.com" }
-        ]
-    }
+    Map<String, Attribute> attributes = [
+            username : attribute { faker.name().username() },
+            firstName: attribute { faker.name().firstName() },
+            lastName : attribute { faker.name().lastName() },
+            email    : attribute { "${get("firstName")}.${get("lastName")}@example.com" }
+    ]
 }
 ```
 
