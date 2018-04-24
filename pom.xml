@@ -48,6 +48,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compile.encoding>UTF-8</maven.compile.encoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <gpg.keyname>3BFDF857</gpg.keyname>
 
         <!-- Dependency versions -->
         <gmavenplus-plugin.version>1.5</gmavenplus-plugin.version>
