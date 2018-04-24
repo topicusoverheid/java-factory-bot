@@ -39,12 +39,12 @@ trait FactoryAttributes {
         new Association<>(factory)
     }
 
-    def <T> Association<T> hasOne(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, T defaultObject) {
-        hasOne(FactoryManager.instance.getFactoryInstance(factoryClass), defaultObject)
+    def <T> Association<T> hasOne(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, Closure<T> defaultObjectProducer) {
+        hasOne(FactoryManager.instance.getFactoryInstance(factoryClass), defaultObjectProducer)
     }
 
-    def <T> Association<T> hasOne(BaseFactory<T, ? extends Faker> factory, T defaultObject) {
-        new Association<>(factory, defaultObject)
+    def <T> Association<T> hasOne(BaseFactory<T, ? extends Faker> factory,  Closure<T> defaultObjectProducer) {
+        new Association<>(factory, defaultObjectProducer)
     }
 
     def <T> Association<T> hasOne(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, Map<String, ? extends Object> overrides, List<String> traits = null) {

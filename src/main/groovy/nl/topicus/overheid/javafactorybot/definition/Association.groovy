@@ -12,8 +12,7 @@ import nl.topicus.overheid.javafactorybot.BaseFactory
 class Association<T> implements Attribute {
     private BaseFactory factory
     private Map<String, Object> defaultOverrides
-    private boolean withDefaultObject = false
-    private T defaultObject
+    private Closure<T> defaultObjectProducer
     private List<String> traits
 
     /**
@@ -31,11 +30,10 @@ class Association<T> implements Attribute {
     /**
      * Create a new Association which uses user specified overrides or, in absence of these, uses the given object.
      * @param factory The factory to use for the associated object.
-     * @param defaultObject The default object to be used when no overrides are given.
+     * @param defaultObjectProducer A closure which yields the default object which should be used when no overrides are given.
      */
-    Association(BaseFactory<T, ? extends Faker> factory, T defaultObject) {
-        this.withDefaultObject = true
-        this.defaultObject = defaultObject
+    Association(BaseFactory<T, ? extends Faker> factory, Closure<T> defaultObjectProducer) {
+        this.defaultObjectProducer = defaultObjectProducer
         this.factory = factory
     }
 
@@ -44,9 +42,9 @@ class Association<T> implements Attribute {
         if (defaultOverrides != null) {
             // Build using the default overrides
             factory.build(defaultOverrides, traits)
-        } else if (withDefaultObject) {
+        } else if (defaultObjectProducer != null) {
             // Build using the default object
-            factory.build(defaultObject)
+            factory.build(defaultObjectProducer())
         } else {
             // Default build
             factory.build()
