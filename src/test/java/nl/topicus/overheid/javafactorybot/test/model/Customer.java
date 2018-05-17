@@ -3,6 +3,7 @@ package nl.topicus.overheid.javafactorybot.test.model;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.List;
 
 @Data
 public class Customer {
@@ -16,5 +17,6 @@ public class Customer {
 
     // Relations
     private Address address;
+    private List<Order> orders;
     private WishList wishList;
 }

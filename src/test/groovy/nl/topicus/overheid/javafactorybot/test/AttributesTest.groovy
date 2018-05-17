@@ -6,7 +6,7 @@ import spock.lang.Specification
 
 class AttributesTest extends Specification {
 
-    def "it generates attribute values" () {
+    def "it generates attribute values"() {
         when:
         Address address = AddressFactory.instance.build()
 
@@ -19,7 +19,7 @@ class AttributesTest extends Specification {
         address.id == null
     }
 
-    def "it allows to override attribute values" () {
+    def "it allows to override attribute values"() {
         when:
         Address address = AddressFactory.instance.build(street: "5th Avenue", houseNumber: "123")
 
@@ -32,11 +32,11 @@ class AttributesTest extends Specification {
         address.id == null
 
         when:
-        address = AddressFactory.instance.build([street: "Main street", houseNumber: "2b", id: 2])
+        address = AddressFactory.instance.build([street: "Main street", houseNumber: null, id: 2])
 
         then:
         address.street == "Main street"
-        address.houseNumber == "2b"
+        address.houseNumber == null
         address.zipCode != null
         address.city != null
         address.country != null
