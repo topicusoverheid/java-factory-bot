@@ -18,6 +18,11 @@ class CustomerFactory extends Factory<Customer> {
             creationDate: attribute { faker.date().past(100, TimeUnit.DAYS) },
             address     : hasOne(AddressFactory),
             orders      : hasMany(OrderFactory, faker.number().numberBetween(1, 5)),
-            wishList    : hasOne(WishListFactory)
+            wishList    : hasOne(WishListFactory, customer: null)
     ]
+
+    @Override
+    void onAfterBuild(Customer customer) {
+        customer?.wishList?.customer = customer
+    }
 }
