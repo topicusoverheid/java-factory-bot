@@ -1,6 +1,7 @@
 # java-factory-bot
 
 [![Build Status](https://travis-ci.org/topicusoverheid/java-factory-bot.svg?branch=master)](https://travis-ci.org/topicusoverheid/java-factory-bot)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/nl.topicus.overheid/java-factory-bot/badge.svg)](https://mvnrepository.com/artifact/nl.topicus.overheid/java-factory-bot)
 
 A library for creating objects as test data, with support for persisting the objects in a database.
 
