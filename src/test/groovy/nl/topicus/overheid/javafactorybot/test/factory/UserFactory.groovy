@@ -8,10 +8,10 @@ class UserFactory extends Factory<User> {
     @Override
     Map<String, Attribute> getAttributes() {
         [
-                username : attribute { faker.name().username() },
-                firstName: attribute { faker.name().firstName() },
-                lastName : attribute { faker.name().lastName() },
-                email    : attribute { "${get("firstName")}.${get("lastName")}@example.com" }
+                username : value { faker.name().username() },
+                firstName: value { faker.name().firstName() },
+                lastName : value { faker.name().lastName() },
+                email    : value { "${get("firstName")}.${get("lastName")}@example.com" }
         ]
     }
 }

@@ -11,10 +11,10 @@ class ArticleFactory extends Factory<Article> {
     @Override
     Map<String, Attribute> getAttributes() {
         [
-                title       : attribute { faker.lorem().sentence() },
-                content     : attribute { faker.lorem().paragraph() },
-                creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) },
-                summary     : attribute { null },
+                title       : value { faker.lorem().sentence() },
+                content     : value { faker.lorem().paragraph() },
+                creationDate: value { faker.date().past(20, TimeUnit.DAYS) },
+                summary     : value { null },
                 author      : hasOne(UserFactory),
                 comments    : hasMany(CommentFactory)
         ]

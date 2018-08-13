@@ -27,7 +27,7 @@ trait FactoryAttributes {
      * @param defaultValueGenerator The closure which generates a value when no override is given.
      * @return An attribute which resolves to the override or the result of the closure.
      */
-    ValueAttribute attribute(@DelegatesTo(Evaluator) @ClosureParams(value = SimpleType, options = "Evaluator") Closure defaultValueGenerator) {
+    ValueAttribute value(@DelegatesTo(Evaluator) @ClosureParams(value = SimpleType, options = "Evaluator") Closure defaultValueGenerator) {
         new ValueAttribute(defaultValueGenerator)
     }
 

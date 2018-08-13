@@ -12,8 +12,8 @@ class CommentFactory extends Factory<Comment> {
         [
                 article     : hasOne(ArticleFactory),
                 author      : hasOne(UserFactory),
-                content     : attribute { faker.lorem().paragraph() },
-                creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) }
+                content     : value { faker.lorem().paragraph() },
+                creationDate: value { faker.date().past(20, TimeUnit.DAYS) }
         ]
     }
 }
