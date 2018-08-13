@@ -5,7 +5,6 @@ import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import nl.topicus.overheid.javafactorybot.BaseFactory
 import nl.topicus.overheid.javafactorybot.Evaluator
-import nl.topicus.overheid.javafactorybot.FactoryManager
 import nl.topicus.overheid.javafactorybot.definition.Association
 import nl.topicus.overheid.javafactorybot.definition.Attribute
 import nl.topicus.overheid.javafactorybot.definition.ManyAssociation
@@ -32,7 +31,7 @@ trait FactoryAttributes {
     }
 
     def <T> Association<T> hasOne(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass) {
-        hasOne(FactoryManager.instance.getFactoryInstance(factoryClass))
+        new Association<>(factoryClass)
     }
 
     def <T> Association<T> hasOne(BaseFactory<T, ? extends Faker> factory) {
@@ -40,19 +39,23 @@ trait FactoryAttributes {
     }
 
     def <T> Association<T> hasOne(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, Closure<T> defaultObjectProducer) {
-        hasOne(FactoryManager.instance.getFactoryInstance(factoryClass), defaultObjectProducer)
+        new Association<>(factoryClass, defaultObjectProducer)
     }
 
-    def <T> Association<T> hasOne(BaseFactory<T, ? extends Faker> factory,  Closure<T> defaultObjectProducer) {
+    def <T> Association<T> hasOne(BaseFactory<T, ? extends Faker> factory, Closure<T> defaultObjectProducer) {
         new Association<>(factory, defaultObjectProducer)
     }
 
     def <T> Association<T> hasOne(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, Map<String, ? extends Object> overrides, List<String> traits = null) {
-        hasOne(FactoryManager.instance.getFactoryInstance(factoryClass), overrides, traits)
+        new Association<>(factoryClass, overrides, traits)
     }
 
     def <T> Association<T> hasOne(BaseFactory<T, ? extends Faker> factory, Map<String, ? extends Object> overrides, List<String> traits = null) {
         new Association<>(factory, overrides, traits)
+    }
+
+    def <T> Association<T> hasOne(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, List<String> traits) {
+        hasOne(factoryClass, [:], traits)
     }
 
     def <T> Association<T> hasOne(BaseFactory<T, ? extends Faker> factory, List<String> traits) {
@@ -70,7 +73,7 @@ trait FactoryAttributes {
     }
 
     def <T> ManyAssociation<T> hasMany(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, int amount = 0, Map<String, ? extends Object> overrides = null, List<String> traits = null) {
-        hasMany(FactoryManager.instance.getFactoryInstance(factoryClass), amount, overrides, traits)
+        new ManyAssociation<>(factoryClass, amount, overrides, traits)
     }
 
     def <T> ManyAssociation<T> hasMany(BaseFactory<T, ? extends Faker> factory, int amount = 0, Map<String, ? extends Object> overrides = null, List<String> traits = null) {
@@ -88,7 +91,7 @@ trait FactoryAttributes {
     }
 
     def <T> ManyAssociation<T> hasMany(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, List<Object> defaultOverrides, List<String> traits = null) {
-        hasMany(FactoryManager.instance.getFactoryInstance(factoryClass), defaultOverrides, traits)
+        new ManyAssociation<>(factoryClass, defaultOverrides, traits)
     }
 
     def <T> ManyAssociation<T> hasMany(BaseFactory<T, ? extends Faker> factory, List<Object> defaultOverrides, List<String> traits = null) {
