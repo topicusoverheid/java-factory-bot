@@ -68,7 +68,7 @@ trait FactoryDSL {
         if (defaultOverrides instanceof Closure) {
             association.defaultOverridesProducer = defaultOverrides
         } else {
-            association.defaultOverridesProducer = { defaultOverrides as Map<String, Object> }
+            association.defaultOverridesProducer = defaultOverrides ? { defaultOverrides as Map<String, Object> } : null
         }
         association.traits = args['traits'] as List<String>
         association.afterBuild = (args['afterBuild'] ?: false) as boolean
@@ -80,9 +80,10 @@ trait FactoryDSL {
         if (generalOverrides instanceof Closure) {
             association.generalOverridesProvider = generalOverrides
         } else {
-            association.generalOverridesProvider = { generalOverrides as Map<String, Object> }
+            association.generalOverridesProvider = generalOverrides ? { generalOverrides as Map<String, Object> } : null
         }
         association.traits = args['traits'] as List<String>
         association.afterBuild = (args['afterBuild'] ?: false) as boolean
+        association.amount = (args['amount'] ?: 0) as int
     }
 }
