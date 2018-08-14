@@ -10,8 +10,8 @@ import java.lang.reflect.ParameterizedType
  * A factory is a special class which is able to generate new valid objects, for testing purposes.
  * These objects can be randomized by using a faker.
  *
- * @param < M >            The type of the generated object
- * @param < F >            The type of the faker of this factory. This allows to override the faker with a custom implementation.
+ * @param < M >             The type of the generated object
+ * @param < F >             The type of the faker of this factory. This allows to override the faker with a custom implementation.
  */
 abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     /**
@@ -264,7 +264,7 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      * @return The persisted object.
      */
     protected M persist(M object, FactoryContext context = null) {
-        if (context != null) context.persist(object) else object
+        if (context != null && object != null) context.persist(object) else object
     }
 
     // Private methods down here

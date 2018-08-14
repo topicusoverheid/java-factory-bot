@@ -29,56 +29,41 @@ trait FactoryDSL {
         new Association<>(factory)
     }
 
-//    def <T> Association<T> hasOne(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass,
-//                                  Closure<T> defaultObjectProducer) {
-//        new Association<>(factoryClass, defaultObjectProducer)
-//    }
-//
-//    def <T> Association<T> hasOne(BaseFactory<T, ? extends Faker> factory,
-//                                  Closure<T> defaultObjectProducer) {
-//        new Association<>(factory, defaultObjectProducer)
-//    }
-
-//
-//    def <T> Association<T> hasOne(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass,
-//                                  Map<String, ? extends Object> overrides,
-//                                  List<String> traits = null) {
-//        new Association<>(factoryClass, overrides, traits)
-//    }
-//
-//    def <T> Association<T> hasOne(BaseFactory<T, ? extends Faker> factory,
-//                                  Map<String, ? extends Object> overrides,
-//                                  List<String> traits = null) {
-//        new Association<>(factory, overrides, traits)
-//    }
-//
-//    def <T> Association<T> hasOne(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass,
-//                                  List<String> traits) {
-//        hasOne(factoryClass, [:], traits)
-//    }
-//
-//    def <T> Association<T> hasOne(BaseFactory<T, ? extends Faker> factory,
-//                                  List<String> traits) {
-//        hasOne(factory, [:], traits)
-//    }
-
-    // Special version for groovy syntax
-    def <T> Association<T> hasOne(Map<String, ? extends Object> args,
-                                  Class<? extends BaseFactory<T, ? extends Faker>> factoryClass) {
+    def <T> Association<T> hasOne(Map<String, ? extends Object> args, Class<? extends BaseFactory<T, ? extends Faker>> factoryClass) {
         Association<T> association = new Association(factoryClass)
-        parseArgs(association, args)
+        parseHasOneArgs(association, args)
+        association
+    }
+
+    def <T> Association<T> hasOne(Map<String, ? extends Object> args, BaseFactory<T, ? extends Faker> factory) {
+        Association<T> association = new Association(factory)
+        parseHasOneArgs(association, args)
+        association
+    }
+
+    def <T> ManyAssociation<T> hasMany(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass) {
+        new ManyAssociation(factoryClass)
+    }
+
+    def <T> ManyAssociation<T> hasMany(BaseFactory<T, ? extends Faker> factory) {
+        new ManyAssociation(factory)
+    }
+
+    // Special version for groovy syntax
+    def <T> ManyAssociation<T> hasMany(Map<String, ? extends Object> args, Class<? extends BaseFactory<T, ? extends Faker>> factoryClass) {
+        def association = new ManyAssociation(factoryClass)
+        parseHasManyArgs(association, args)
         association
     }
 
     // Special version for groovy syntax
-    def <T> Association<T> hasOne(Map<String, ? extends Object> args,
-                                  BaseFactory<T, ? extends Faker> factory) {
-        Association<T> association = new Association(factory)
-        parseArgs(association, args)
+    def <T> ManyAssociation<T> hasMany(Map<String, ? extends Object> args, BaseFactory<T, ? extends Faker> factory) {
+        def association = new ManyAssociation(factory)
+        parseHasManyArgs(association, args)
         association
     }
 
-    def parseArgs(Association association, Map<String, ? extends Object> args) {
+    private def parseHasOneArgs(Association association, Map<String, ? extends Object> args) {
         association.defaultObjectProducer = args['default'] as Closure
         def defaultOverrides = args['overrides']
         if (defaultOverrides instanceof Closure) {
@@ -88,48 +73,17 @@ trait FactoryDSL {
         }
         association.traits = args['traits'] as List<String>
         association.activePhase = (args['phase'] ?: FactoryPhase.INIT) as FactoryPhase
-        association.inverse = args['inverse'] as String
     }
 
-    def <T> ManyAssociation<T> hasMany(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass,
-                                       int amount = 0,
-                                       Map<String, ? extends Object> overrides = null,
-                                       List<String> traits = null) {
-        new ManyAssociation<>(factoryClass, amount, overrides, traits)
-    }
-
-    def <T> ManyAssociation<T> hasMany(BaseFactory<T, ? extends Faker> factory,
-                                       int amount = 0,
-                                       Map<String, ? extends Object> overrides = null,
-                                       List<String> traits = null) {
-        new ManyAssociation<>(factory, amount, overrides, traits)
-    }
-
-    // Special version for groovy syntax
-    def <T> ManyAssociation<T> hasMany(Map<String, ? extends Object> overrides,
-                                       Class<? extends BaseFactory<T, ? extends Faker>> factoryClass,
-                                       int amount = 0,
-                                       List<String> traits = null) {
-        hasMany(factoryClass, amount, overrides, traits)
-    }
-
-    // Special version for groovy syntax
-    def <T> ManyAssociation<T> hasMany(Map<String, ? extends Object> overrides,
-                                       BaseFactory<T, ? extends Faker> factory,
-                                       int amount = 0,
-                                       List<String> traits = null) {
-        hasMany(factory, amount, overrides, traits)
-    }
-
-    def <T> ManyAssociation<T> hasMany(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass,
-                                       List<Object> defaultOverrides,
-                                       List<String> traits = null) {
-        new ManyAssociation<>(factoryClass, defaultOverrides, traits)
-    }
-
-    def <T> ManyAssociation<T> hasMany(BaseFactory<T, ? extends Faker> factory,
-                                       List<Object> defaultOverrides,
-                                       List<String> traits = null) {
-        new ManyAssociation<>(factory, defaultOverrides, traits)
+    private def parseHasManyArgs(ManyAssociation association, Map<String, ? extends Object> args) {
+        association.overrides = args['overrides'] as List
+        def generalOverrides = args['generalOverrides']
+        if (generalOverrides instanceof Closure) {
+            association.generalOverridesProvider = generalOverrides
+        } else {
+            association.generalOverridesProvider = { generalOverrides as Map<String, Object> }
+        }
+        association.traits = args['traits'] as List<String>
+        association.activePhase = (args['phase'] ?: FactoryPhase.INIT) as FactoryPhase
     }
 }

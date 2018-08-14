@@ -15,7 +15,6 @@ class Association<T> extends AbstractFactoryAttribute<T> implements Attribute{
     Closure<Map<String, Object>> defaultOverridesProducer
     Closure<T> defaultObjectProducer
     List<String> traits
-    String inverse
     FactoryPhase activePhase = FactoryPhase.INIT
 
     /**
@@ -24,20 +23,8 @@ class Association<T> extends AbstractFactoryAttribute<T> implements Attribute{
      * @param defaultOverrides Default overrides to pass to the factory. Can be overriden by user specified overrides.
      * @param traits List of traits to apply to the associated object.
      */
-    Association(BaseFactory<T, ? extends Faker> factory, Map<String, Object> defaultOverrides = null, List<String> traits = null) {
+    Association(BaseFactory<T, ? extends Faker> factory) {
         super(factory)
-        this.defaultOverridesProducer = { defaultOverrides }
-        this.traits = traits
-    }
-
-    /**
-     * Create a new Association which uses user specified overrides or, in absence of these, uses the given object.
-     * @param factory The factory to use for the associated object.
-     * @param defaultObjectProducer A closure which yields the default object which should be used when no overrides are given.
-     */
-    Association(BaseFactory<T, ? extends Faker> factory, Closure<T> defaultObjectProducer) {
-        super(factory)
-        this.defaultObjectProducer = defaultObjectProducer
     }
 
     /**
@@ -47,21 +34,8 @@ class Association<T> extends AbstractFactoryAttribute<T> implements Attribute{
      * @param defaultOverrides Default overrides to pass to the factory. Can be overriden by user specified overrides.
      * @param traits List of traits to apply to the associated object.
      */
-    Association(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, Map<String, Object> defaultOverrides = null, List<String> traits = null) {
+    Association(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass) {
         super(factoryClass)
-        this.defaultOverridesProducer = { defaultOverrides }
-        this.traits = traits
-    }
-
-    /**
-     * Create a new Association which uses user specified overrides or, in absence of these, uses the given object.
-     * @param factoryClass The class of the factory to use for the associated object.
-     * The factory itself is lazily initialized using {@link FactoryManager#getFactoryInstance(java.lang.Class)}.
-     * @param defaultObjectProducer A closure which yields the default object which should be used when no overrides are given.
-     */
-    Association(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, Closure<T> defaultObjectProducer) {
-        super(factoryClass)
-        this.defaultObjectProducer = defaultObjectProducer
     }
 
     @Override
