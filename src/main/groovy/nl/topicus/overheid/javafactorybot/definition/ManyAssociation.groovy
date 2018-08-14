@@ -3,6 +3,7 @@ package nl.topicus.overheid.javafactorybot.definition
 import com.github.javafaker.Faker
 import nl.topicus.overheid.javafactorybot.BaseFactory
 import nl.topicus.overheid.javafactorybot.Evaluator
+import nl.topicus.overheid.javafactorybot.FactoryPhase
 
 /**
  * Attribute used to define an association with a list of objects, using a factory.
@@ -15,6 +16,8 @@ class ManyAssociation<T> extends AbstractFactoryAttribute<T> implements Attribut
     private List<Object> defaultOverrides
     private int amount
     private List<String> traits
+
+    FactoryPhase activePhase = FactoryPhase.INIT
 
     /**
      * Create a new Association which combines user specified overrides with optional default overrides and traits.

@@ -9,30 +9,50 @@ import nl.topicus.overheid.javafactorybot.exception.EvaluationException
 class Evaluator {
     private Map<String, Attribute> attributes
     private Map<String, Object> overrides
+    private List<String> traits
     private Map<String, Object> cache
     private BaseFactory factory
 
-    Evaluator(BaseFactory factory, Map<String, Attribute> attributes, Map<String, Object> overrides) {
+    Evaluator(BaseFactory factory, List<String> traits, Map<String, Object> overrides) {
         this.factory = factory
-        this.attributes = attributes
+        this.traits = traits
         this.overrides = overrides
+        this.attributes = compileAttributes()
         this.cache = new HashMap<>()
     }
 
-    /**
-     * Returns a map of all evaluated attributes. These values are based on the defined fields in the factory and
-     * possible user specified overrides.
-     * @return The evaluated values of of all attributes and associations.
-     */
-    def attributes() {
-        // Make sure cache is filled with values
-        (overrides.keySet() + attributes.keySet()).each {
-            // For each unevaluated value, evaluate the value
-            if (!cache.containsKey(it)) {
-                evaluate(it)
-            }
+    Map<String, Object> evaluateForBuildPhase(FactoryPhase buildPhase) {
+        def result
+
+        Map<String, Attribute> activeAttributes = attributes.findAll { it.value.activePhase == buildPhase }
+
+        switch (buildPhase) {
+            case FactoryPhase.INIT:
+                result = evaluateForKeys(overrides.keySet() + activeAttributes.keySet())
+                break
+            case FactoryPhase.FINALIZE:
+                result = evaluateForKeys(activeAttributes.keySet())
+                break
         }
-        cache
+
+        result
+    }
+
+    Map<String, Object> evaluateForKeys(Collection<String> keys) {
+        keys.inject([:], { Map result, String key -> result.put(key, get(key)); result }) as Map<String, Object>
+    }
+
+    /**
+     * Returns the evaluated value of a single attribute
+     * @param name The name of the attribute to evaluate
+     * @return The evaluated value of the attribute
+     */
+    def get(String name) {
+        if (!cache.containsKey(name)) {
+            evaluate(name)
+        }
+
+        return cache[name]
     }
 
     /**
@@ -56,15 +76,18 @@ class Evaluator {
     }
 
     /**
-     * Returns the evaluated value of a single attribute
-     * @param name The name of the attribute to evaluate
-     * @return The evaluated value of the attribute
+     * Compile the list of traits into the base attributes
+     *
+     * @param traits List of traits to apply, can be null or empty.
+     * @return A map of attributes including attributes from the traits.
      */
-    def get(String name) {
-        if (!cache.containsKey(name)) {
-            evaluate(name)
+    private Map<String, Attribute> compileAttributes(List<String> traits) {
+        if (traits != null && !traits.isEmpty()) {
+            traits.inject(factory.attributes, { Map attributes, String traitName ->
+                attributes + factory.findTrait(traitName).attributes
+            }) as Map<String, Attribute>
+        } else {
+            factory.attributes
         }
-
-        return cache[name]
     }
 }
