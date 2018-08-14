@@ -26,13 +26,13 @@ class ValueAttribute implements Attribute {
     }
 
     @Override
-    def evaluate(Evaluator evaluator) {
+    def evaluate(Evaluator evaluator, Object owner) {
         defaultValueGenerator.delegate = evaluator
         defaultValueGenerator(evaluator)
     }
 
     @Override
-    def evaluate(Object override, Evaluator evaluator) {
+    def evaluate(Object override, Evaluator evaluator, Object owner) {
         override
     }
 }

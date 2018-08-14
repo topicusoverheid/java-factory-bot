@@ -12,7 +12,7 @@ import nl.topicus.overheid.javafactorybot.FactoryPhase
  * @param < T >    The type of the associated object.
  */
 class Association<T> extends AbstractFactoryAttribute<T> implements Attribute{
-    Map<String, Object> defaultOverrides
+    Closure<Map<String, Object>> defaultOverridesProducer
     Closure<T> defaultObjectProducer
     List<String> traits
     String inverse
@@ -26,7 +26,7 @@ class Association<T> extends AbstractFactoryAttribute<T> implements Attribute{
      */
     Association(BaseFactory<T, ? extends Faker> factory, Map<String, Object> defaultOverrides = null, List<String> traits = null) {
         super(factory)
-        this.defaultOverrides = defaultOverrides
+        this.defaultOverridesProducer = { defaultOverrides }
         this.traits = traits
     }
 
@@ -49,7 +49,7 @@ class Association<T> extends AbstractFactoryAttribute<T> implements Attribute{
      */
     Association(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass, Map<String, Object> defaultOverrides = null, List<String> traits = null) {
         super(factoryClass)
-        this.defaultOverrides = defaultOverrides
+        this.defaultOverridesProducer = { defaultOverrides }
         this.traits = traits
     }
 
@@ -65,10 +65,10 @@ class Association<T> extends AbstractFactoryAttribute<T> implements Attribute{
     }
 
     @Override
-    def evaluate(Evaluator evaluator) {
-        if (defaultOverrides != null) {
+    def evaluate(Evaluator evaluator, Object owner) {
+        if (defaultOverridesProducer != null) {
             // Build using the default overrides
-            getFactory().build(defaultOverrides, traits)
+            getFactory().build(defaultOverridesProducer(owner), traits)
         } else if (defaultObjectProducer != null) {
             // Build using the default object
             getFactory().build(defaultObjectProducer())
@@ -79,12 +79,12 @@ class Association<T> extends AbstractFactoryAttribute<T> implements Attribute{
     }
 
     @Override
-    def evaluate(Object override, Evaluator evaluator) {
+    def evaluate(Object override, Evaluator evaluator, Object owner) {
         if (override == null || override instanceof T) {
             getFactory().build((T) override)
         } else if (override instanceof Map) {
             // override given as map, use these together with default overrides to build the object
-            getFactory().build(defaultOverrides ? defaultOverrides + override : override, traits)
+            getFactory().build(defaultOverridesProducer ? defaultOverridesProducer(owner) + override : override, traits)
         } else {
             throw new IllegalArgumentException("Override should be null, a Map or an object of the associated type")
         }

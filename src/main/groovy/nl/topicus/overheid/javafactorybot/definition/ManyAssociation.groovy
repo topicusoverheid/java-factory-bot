@@ -74,7 +74,7 @@ class ManyAssociation<T> extends AbstractFactoryAttribute<T> implements Attribut
     }
 
     @Override
-    def evaluate(Evaluator evaluator) {
+    def evaluate(Evaluator evaluator, Object owner) {
         if (defaultOverrides != null) {
             getFactory().buildList(defaultOverrides)
         } else if (defaultItemOverrides != null) {
@@ -85,7 +85,7 @@ class ManyAssociation<T> extends AbstractFactoryAttribute<T> implements Attribut
     }
 
     @Override
-    def evaluate(Object override, Evaluator evaluator) {
+    def evaluate(Object override, Evaluator evaluator, Object owner) {
         if (override instanceof List) {
             getFactory().buildList(compileListOverride(override))
         } else if (override instanceof Integer) {

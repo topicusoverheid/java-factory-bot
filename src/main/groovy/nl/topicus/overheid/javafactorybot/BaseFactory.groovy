@@ -5,12 +5,13 @@ import nl.topicus.overheid.javafactorybot.definition.Definition
 import nl.topicus.overheid.javafactorybot.exception.TraitNotFoundException
 
 import java.lang.reflect.ParameterizedType
+
 /**
  * A factory is a special class which is able to generate new valid objects, for testing purposes.
  * These objects can be randomized by using a faker.
  *
- * @param < M >           The type of the generated object
- * @param < F >           The type of the faker of this factory. This allows to override the faker with a custom implementation.
+ * @param < M >            The type of the generated object
+ * @param < F >            The type of the faker of this factory. This allows to override the faker with a custom implementation.
  */
 abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     /**
@@ -81,7 +82,7 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      */
     M build(Map<String, Object> overrides, List<String> traits = null) {
         def evaluator = new Evaluator(this, traits, overrides)
-        persist(applyAfterBuildHooks(finalize(construct(init(evaluator)), evaluator), traits), FactoryManager.instance.currentContext)
+        persist(finalize(construct(init(evaluator)), evaluator), FactoryManager.instance.currentContext)
     }
 
     /**
@@ -233,8 +234,8 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
 
     // Build process steps down here
 
-    protected Map<String, Object> init(Evaluator evaluator){
-        applyAfterAttributesHooks(evaluator.evaluateForBuildPhase(FactoryPhase.INIT))
+    protected Map<String, Object> init(Evaluator evaluator) {
+        applyAfterAttributesHooks(evaluator.evaluatorForInitPhase(), evaluator.traits)
     }
 
     /**
@@ -249,7 +250,9 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     }
 
     protected M finalize(M object, Evaluator evaluator) {
-        object
+        Map<String, Object> attrs = evaluator.evaluatorForFinalizePhase(object)
+        attrs.each { key, value -> object."$key" = value }
+        applyAfterBuildHooks(object, evaluator.traits)
     }
 
     /**

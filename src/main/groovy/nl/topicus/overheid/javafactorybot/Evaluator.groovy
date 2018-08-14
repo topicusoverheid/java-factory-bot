@@ -2,14 +2,13 @@ package nl.topicus.overheid.javafactorybot
 
 import nl.topicus.overheid.javafactorybot.definition.Attribute
 import nl.topicus.overheid.javafactorybot.exception.EvaluationException
-
 /**
  * An evaluator takes a factory and the user specified overrides and yields the evaluated values of the attributes.
  */
 class Evaluator {
     private Map<String, Attribute> attributes
     private Map<String, Object> overrides
-    private List<String> traits
+    List<String> traits
     private Map<String, Object> cache
     private BaseFactory factory
 
@@ -21,35 +20,29 @@ class Evaluator {
         this.cache = new HashMap<>()
     }
 
-    Map<String, Object> evaluateForBuildPhase(FactoryPhase buildPhase) {
-        def result
-
-        Map<String, Attribute> activeAttributes = attributes.findAll { it.value.activePhase == buildPhase }
-
-        switch (buildPhase) {
-            case FactoryPhase.INIT:
-                result = evaluateForKeys(overrides.keySet() + activeAttributes.keySet())
-                break
-            case FactoryPhase.FINALIZE:
-                result = evaluateForKeys(activeAttributes.keySet())
-                break
-        }
-
-        result
+    Map<String, Object> evaluatorForInitPhase() {
+        Map<String, Attribute> activeAttributes = attributes.findAll { it.value.activePhase == FactoryPhase.INIT }
+        evaluateForKeys(overrides ? overrides.keySet() + activeAttributes.keySet() : activeAttributes.keySet())
     }
 
-    Map<String, Object> evaluateForKeys(Collection<String> keys) {
-        keys.inject([:], { Map result, String key -> result.put(key, get(key)); result }) as Map<String, Object>
+    Map<String, Object> evaluatorForFinalizePhase(Object owner) {
+        Map<String, Attribute> activeAttributes = attributes.findAll { it.value.activePhase == FactoryPhase.FINALIZE }
+        evaluateForKeys(activeAttributes.keySet(), owner)
+    }
+
+    Map<String, Object> evaluateForKeys(Collection<String> keys, Object owner = null) {
+        keys.inject([:], { Map result, String key -> result.put(key, get(key, owner)); result }) as Map<String, Object>
     }
 
     /**
      * Returns the evaluated value of a single attribute
      * @param name The name of the attribute to evaluate
+     * @param owner The owner of the value of the attribute, if the owner is already build.
      * @return The evaluated value of the attribute
      */
-    def get(String name) {
+    def get(String name, Object owner = null) {
         if (!cache.containsKey(name)) {
-            evaluate(name)
+            evaluate(name, owner)
         }
 
         return cache[name]
@@ -58,17 +51,18 @@ class Evaluator {
     /**
      * Evaluates the attribute with the given name. Discards any value already in the cache.
      * @param name The name of the attribute to evaluate.
+     * @param owner The owner of the value of the attribute, if the owner is already build.
      * @return The evaluated value.
      */
-    private def evaluate(String name) {
+    private def evaluate(String name, Object owner = null) {
         def attribute = attributes.get(name)
         if (attribute != null) {
             try {
-                cache[name] = overrides.containsKey(name) ? attribute.evaluate(overrides[name], this) : attribute.evaluate(this)
+                cache[name] = overrides != null && overrides.containsKey(name) ? attribute.evaluate(overrides[name], this, owner) : attribute.evaluate(this, owner)
             } catch (Exception e) {
                 throw new EvaluationException(this, name, e)
             }
-        } else if (overrides.containsKey(name)) {
+        } else if (overrides != null && overrides.containsKey(name)) {
             cache[name] = overrides[name]
         } else {
             throw new EvaluationException(this, name)
@@ -76,12 +70,11 @@ class Evaluator {
     }
 
     /**
-     * Compile the list of traits into the base attributes
+     * Compile the current list of traits into the base attributes
      *
-     * @param traits List of traits to apply, can be null or empty.
      * @return A map of attributes including attributes from the traits.
      */
-    private Map<String, Attribute> compileAttributes(List<String> traits) {
+    private Map<String, Attribute> compileAttributes() {
         if (traits != null && !traits.isEmpty()) {
             traits.inject(factory.attributes, { Map attributes, String traitName ->
                 attributes + factory.findTrait(traitName).attributes
