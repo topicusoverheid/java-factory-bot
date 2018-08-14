@@ -5,7 +5,6 @@ import groovy.transform.stc.ClosureParams
 import groovy.transform.stc.SimpleType
 import nl.topicus.overheid.javafactorybot.BaseFactory
 import nl.topicus.overheid.javafactorybot.Evaluator
-import nl.topicus.overheid.javafactorybot.FactoryPhase
 import nl.topicus.overheid.javafactorybot.definition.Association
 import nl.topicus.overheid.javafactorybot.definition.ManyAssociation
 import nl.topicus.overheid.javafactorybot.definition.ValueAttribute
@@ -72,7 +71,7 @@ trait FactoryDSL {
             association.defaultOverridesProducer = { defaultOverrides as Map<String, Object> }
         }
         association.traits = args['traits'] as List<String>
-        association.activePhase = (args['phase'] ?: FactoryPhase.INIT) as FactoryPhase
+        association.afterBuild = (args['afterBuild'] ?: false) as boolean
     }
 
     private def parseHasManyArgs(ManyAssociation association, Map<String, ? extends Object> args) {
@@ -84,6 +83,6 @@ trait FactoryDSL {
             association.generalOverridesProvider = { generalOverrides as Map<String, Object> }
         }
         association.traits = args['traits'] as List<String>
-        association.activePhase = (args['phase'] ?: FactoryPhase.INIT) as FactoryPhase
+        association.afterBuild = (args['afterBuild'] ?: false) as boolean
     }
 }

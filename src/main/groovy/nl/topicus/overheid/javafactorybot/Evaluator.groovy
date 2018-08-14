@@ -21,12 +21,12 @@ class Evaluator {
     }
 
     Map<String, Object> evaluatorForInitPhase() {
-        Map<String, Attribute> activeAttributes = attributes.findAll { it.value.activePhase == FactoryPhase.INIT }
+        Map<String, Attribute> activeAttributes = attributes.findAll { !it.value.afterBuild }
         evaluateForKeys(overrides ? overrides.keySet() + activeAttributes.keySet() : activeAttributes.keySet())
     }
 
     Map<String, Object> evaluatorForFinalizePhase(Object owner) {
-        Map<String, Attribute> activeAttributes = attributes.findAll { it.value.activePhase == FactoryPhase.FINALIZE }
+        Map<String, Attribute> activeAttributes = attributes.findAll { it.value.afterBuild }
         evaluateForKeys(activeAttributes.keySet(), owner)
     }
 

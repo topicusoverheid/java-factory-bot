@@ -1,7 +1,6 @@
 package nl.topicus.overheid.javafactorybot.definition
 
 import nl.topicus.overheid.javafactorybot.Evaluator
-import nl.topicus.overheid.javafactorybot.FactoryPhase
 
 /**
  * Interface of a definition of an attribute of an object. An Attribute is responsible for generating the value of the
@@ -30,5 +29,12 @@ interface Attribute extends GroovyObject {
      */
     def evaluate(Object override, Evaluator evaluator, Object owner)
 
-    FactoryPhase getActivePhase()
+    /**
+     * Determines if this attribute should be evaluated before or after the owner object is build.
+     *
+     * If the result is {@code false}, the attribute will be evaluated during the init phase (in which attributes are build).
+     * If the result is {@code true}, the attribute will be evaluated during the finalize phase (after build, before optional persist).
+     * @return If the attribute should be evaluated after the owner object is build.
+     */
+    boolean isAfterBuild()
 }

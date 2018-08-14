@@ -4,8 +4,6 @@ import com.github.javafaker.Faker
 import nl.topicus.overheid.javafactorybot.BaseFactory
 import nl.topicus.overheid.javafactorybot.Evaluator
 import nl.topicus.overheid.javafactorybot.FactoryManager
-import nl.topicus.overheid.javafactorybot.FactoryPhase
-
 /**
  * Attribute used to define an association with another object, using a factory. A combination of the default overrides,
  * default object, traits and user specified overrides is used to create the associated object using the factory.
@@ -15,7 +13,7 @@ class Association<T> extends AbstractFactoryAttribute<T> implements Attribute{
     Closure<Map<String, Object>> defaultOverridesProducer
     Closure<T> defaultObjectProducer
     List<String> traits
-    FactoryPhase activePhase = FactoryPhase.INIT
+    boolean afterBuild = false
 
     /**
      * Create a new Association which combines user specified overrides with optional default overrides and traits.
