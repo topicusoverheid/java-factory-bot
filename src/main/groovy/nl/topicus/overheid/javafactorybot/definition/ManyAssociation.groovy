@@ -3,11 +3,12 @@ package nl.topicus.overheid.javafactorybot.definition
 import com.github.javafaker.Faker
 import nl.topicus.overheid.javafactorybot.BaseFactory
 import nl.topicus.overheid.javafactorybot.Evaluator
+
 /**
  * Attribute used to define an association with a list of objects, using a factory.
  * A combination of the default overrides, default object, traits and user specified overrides is used to create the
  * associated object using the factory.
- * @param < T >  The type of the associated object.
+ * @param < T >   The type of the associated object.
  */
 class ManyAssociation<T> extends AbstractFactoryAttribute<T> implements Attribute {
     Closure<Map<String, Object>> generalOverridesProvider
@@ -15,6 +16,7 @@ class ManyAssociation<T> extends AbstractFactoryAttribute<T> implements Attribut
     int amount
     List<String> traits
     boolean afterBuild = false
+    Closure transform = null
 
     /**
      * Create a new Association which combines user specified overrides with optional default overrides and traits.
@@ -25,7 +27,6 @@ class ManyAssociation<T> extends AbstractFactoryAttribute<T> implements Attribut
     ManyAssociation(BaseFactory<T, ? extends Faker> factory) {
         super(factory)
     }
-
 
     /**
      * Create a new Association which combines user specified overrides with optional default overrides and traits.
@@ -40,27 +41,35 @@ class ManyAssociation<T> extends AbstractFactoryAttribute<T> implements Attribut
 
     @Override
     def evaluate(Evaluator evaluator, Object owner) {
+        def result
+
         if (overrides != null) {
-            getFactory().buildList(compileListOverride(overrides, owner))
+            result = getFactory().buildList(compileListOverride(overrides, owner))
         } else if (generalOverridesProvider != null) {
-            getFactory().buildList(amount, generalOverridesProvider(owner))
+            result = getFactory().buildList(amount, generalOverridesProvider(owner))
         } else {
-            getFactory().buildList(amount)
+            result = getFactory().buildList(amount)
         }
+
+        transform ? transform(result) : result
     }
 
     @Override
     def evaluate(Object override, Evaluator evaluator, Object owner) {
+        def result
+
         if (override instanceof List) {
-            getFactory().buildList(compileListOverride(override, owner))
+            result = getFactory().buildList(compileListOverride(override, owner))
         } else if (override instanceof Integer) {
             // Build the given amount of object
-            getFactory().buildList(override)
+            result = getFactory().buildList(override)
         } else {
             throw new IllegalArgumentException("Override for a toMany association should be an integer (amount) " +
                     "or a list containing individual overrides/objects. " +
-                    "Instead, an instance of type ${override.class.name} was received.")
+                    "Instead, an instance of type ${override.getClass().name} was received.")
         }
+
+        transform ? transform(result) : result
     }
 
     List<Object> compileListOverride(List override, Object owner) {
@@ -68,5 +77,4 @@ class ManyAssociation<T> extends AbstractFactoryAttribute<T> implements Attribut
         // If it is a map, we merge it with the default overrides, just as we do with single associations
         override.collect { it instanceof Map && generalOverridesProvider ? generalOverridesProvider(owner) + it : it }
     }
-
 }

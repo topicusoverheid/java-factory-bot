@@ -85,5 +85,6 @@ trait FactoryDSL {
         association.traits = args['traits'] as List<String>
         association.afterBuild = (args['afterBuild'] ?: false) as boolean
         association.amount = (args['amount'] ?: 0) as int
+        association.transform = args['transform'] as Closure
     }
 }
