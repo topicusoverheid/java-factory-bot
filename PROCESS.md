@@ -16,9 +16,9 @@
                                |
                                | object (T)
                                V
-                         /-----------\    evaluate(object, override?)
-                         | finalize  |  --------------------> [Attribute]
-                         \-----------/  <-------------------------/
+                         /-----------\   
+                         | finalize  | 
+                         \-----------/
                                |
                                | - onAfterBuild(object)
                                | - traits.each(it.onAfterBuild(object))
@@ -28,4 +28,10 @@
         object           /-----------\
   <-------------------   |  persist  |  
                          \-----------/
+                               |
+                               | object (T)
+                               V
+                         /-----------\    evaluate(object, override?)
+                         |  combine  |  --------------------> [Attribute]
+                         \-----------/  <-------------------------/
 ```

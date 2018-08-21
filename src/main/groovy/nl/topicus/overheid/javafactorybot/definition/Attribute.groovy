@@ -32,8 +32,8 @@ interface Attribute extends GroovyObject {
     /**
      * Determines if this attribute should be evaluated before or after the owner object is build.
      *
-     * If the result is {@code false}, the attribute will be evaluated during the init phase (in which attributes are build).
-     * If the result is {@code true}, the attribute will be evaluated during the finalize phase (after build, before optional persist).
+     * If the result is {@code false}, the attribute will be evaluated during the initialize build step (in which attributes are build).
+     * If the result is {@code true}, the attribute will be evaluated during the combine build step (after persist).
      * @return If the attribute should be evaluated after the owner object is build.
      */
     boolean isAfterBuild()

@@ -2,6 +2,7 @@ package nl.topicus.overheid.javafactorybot
 
 import nl.topicus.overheid.javafactorybot.definition.Attribute
 import nl.topicus.overheid.javafactorybot.exception.EvaluationException
+
 /**
  * An evaluator takes a factory and the user specified overrides and yields the evaluated values of the attributes.
  */
@@ -20,14 +21,23 @@ class Evaluator {
         this.cache = new HashMap<>()
     }
 
-    Map<String, Object> evaluatorForInitPhase() {
-        Map<String, Attribute> activeAttributes = attributes.findAll { !it.value.afterBuild }
-        evaluateForKeys(overrides ? overrides.keySet() + activeAttributes.keySet() : activeAttributes.keySet())
+    /**
+     * Gets all values for attributes which should be evaluated during the initialize step of the build process.
+     *
+     * This means that all attributes which are not flagged with afterBuild and all overrides which are not overriding after build attributes
+     * should be evaluated.
+     */
+    Map<String, Object> evaluateForInitialize() {
+        Collection<String> activeAttributeKeys = attributes.findAll { !it.value.afterBuild }.keySet()
+        if (overrides != null) {
+            activeAttributeKeys += (overrides.keySet() - attributes.findAll { it.value.afterBuild }.keySet())
+        }
+        evaluateForKeys(activeAttributeKeys)
     }
 
-    Map<String, Object> evaluatorForFinalizePhase(Object owner) {
-        Map<String, Attribute> activeAttributes = attributes.findAll { it.value.afterBuild }
-        evaluateForKeys(activeAttributes.keySet(), owner)
+    Map<String, Object> evaluateForFinalize(Object owner) {
+        Collection<String> activeAttributeKeys = attributes.findAll { it.value.afterBuild }.keySet()
+        evaluateForKeys(activeAttributeKeys, owner)
     }
 
     Map<String, Object> evaluateForKeys(Collection<String> keys, Object owner = null) {

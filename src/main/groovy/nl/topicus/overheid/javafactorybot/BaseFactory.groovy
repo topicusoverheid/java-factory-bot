@@ -10,8 +10,8 @@ import java.lang.reflect.ParameterizedType
  * A factory is a special class which is able to generate new valid objects, for testing purposes.
  * These objects can be randomized by using a faker.
  *
- * @param < M >             The type of the generated object
- * @param < F >             The type of the faker of this factory. This allows to override the faker with a custom implementation.
+ * @param < M >                      The type of the generated object
+ * @param < F >                      The type of the faker of this factory. This allows to override the faker with a custom implementation.
  */
 abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     /**
@@ -52,7 +52,7 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
         if (object instanceof Map) {
             build(object as Map, [])
         } else {
-            persist(object, FactoryManager.instance.currentContext)
+            persist(finalize(object, null), FactoryManager.instance.currentContext)
         }
     }
 
@@ -82,7 +82,18 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      */
     M build(Map<String, Object> overrides, List<String> traits = null) {
         def evaluator = new Evaluator(this, traits, overrides)
-        persist(finalize(construct(init(evaluator)), evaluator), FactoryManager.instance.currentContext)
+        combine(
+                persist(
+                        finalize(
+                                construct(
+                                        initialize(evaluator)
+                                ),
+                                evaluator
+                        ),
+                        FactoryManager.instance.currentContext
+                ),
+                evaluator
+        )
     }
 
     /**
@@ -234,37 +245,70 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
 
     // Build process steps down here
 
-    protected Map<String, Object> init(Evaluator evaluator) {
-        applyAfterAttributesHooks(evaluator.evaluatorForInitPhase(), evaluator.traits)
+    /**
+     * First step of the build process. Takes the evaluator containing the factory and user specified overrides, and
+     * outputs a map of attribute names to values which should be used to construct the object.
+     *
+     * In this step, all onAfterAttribute hooks are called.
+     *
+     * @param evaluator The evaluator to use in this step.
+     * @return A map containing values of attributes to be used for constructing the boject.
+     */
+    protected Map<String, Object> initialize(Evaluator evaluator) {
+        applyAfterAttributesHooks(evaluator.evaluateForInitialize(), evaluator.traits)
     }
 
     /**
-     * Actual builder of the object, which creates the instance using the computed attributes.
+     * Second step of build process. Actual builder of the object, which creates the instance using the computed attribute values
+     * from the first step {@link #initialize(nl.topicus.overheid.javafactorybot.Evaluator)}.
+     *
      * This method is not used when {@link #build(M)} is called.
      *
-     * @param attributes The computed attributes of the object
+     * @param attributes The computed attribute values of the object
      * @return A object with the values from the given attributes
      */
     protected M construct(Map attributes) {
         getObjectType().newInstance(attributes)
     }
 
+    /**
+     * Third step of the build process. After the object is constructed, it is time for some fine-tuning before the object is
+     * persisted (if we are creating the object) or returned as result.
+     *
+     * In this step, all onAfterBuild hooks are called.
+     *
+     * @param object The result of the second step ({@link #construct(java.util.Map)}
+     * @param evaluator The evalutor to use in this step.
+     * @return An object which is ready to be persisted or returned as result.
+     */
     protected M finalize(M object, Evaluator evaluator) {
-        Map<String, Object> attrs = evaluator.evaluatorForFinalizePhase(object)
-        attrs.each { key, value -> object."$key" = value }
-        applyAfterBuildHooks(object, evaluator.traits)
+        applyAfterBuildHooks(object, evaluator?.traits)
     }
 
     /**
-     * Callback which will persist the object, given the current context specifies the persist strategy. This method
-     * is called after the object is completely build, just after {@link BaseFactory#onAfterBuild(java.lang.Object)}.
+     * Fourth step of the build process. If the object is build within a create context, this step will persist the object
+     * to the data store. Otherwise, this step does nothing.
      *
-     * @param object The built object. Can be null
+     * @param object The object which should be persisted. Can be null
      * @param context The context which should be used to persist the object.
-     * @return The persisted object.
+     * @return The persisted object of the same object.
      */
     protected M persist(M object, FactoryContext context = null) {
-        if (context != null && object != null) context.persist(object) else object
+        (context != null && object != null) ? context.persist(object) : object
+    }
+
+    /**
+     * The fifth step of the build process. Some attribute values can only be created after the owner object is build. In this step,
+     * these attributes are evaluated and combined with the object.
+     *
+     * @param object The build (and persisted) object
+     * @param evaluator The evalutor to use in this step.
+     * @return The object with additional attributes .
+     */
+    protected M combine(M object, Evaluator evaluator) {
+        Map<String, Object> attrs = evaluator.evaluateForFinalize(object)
+        attrs.each { key, value -> object."$key" = value }
+        object
     }
 
     // Private methods down here
