@@ -9,9 +9,12 @@ import nl.topicus.overheid.javafactorybot.definition.Association
 import nl.topicus.overheid.javafactorybot.definition.ManyAssociation
 import nl.topicus.overheid.javafactorybot.definition.ValueAttribute
 
+/**
+ * Trait containing methods which aid in defining a factory.
+ */
 trait FactoryDSL {
     /**
-     * Creates a new attribute which either uses the user specified override or the result of the closure.
+     * Defines an attribute which either uses the user specified override or the result of the closure.
      *
      * @param defaultValueGenerator The closure which generates a value when no override is given.
      * @return An attribute which resolves to the override or the result of the closure.
@@ -20,49 +23,141 @@ trait FactoryDSL {
         new ValueAttribute(defaultValueGenerator)
     }
 
+    /**
+     * Defines a relationship with a single object.
+     *
+     * @param factoryClass The type of the factory which should be used to generate the related object.
+     * @return An association capable of generating the related object.
+     */
     def <T> Association<T> hasOne(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass) {
         new Association<>(factoryClass)
     }
 
+    /**
+     * Defines a relationship with a single object.
+     *
+     * @param factory The factory which should be used to generate the related object.
+     * @return An association capable of generating the related object.
+     */
     def <T> Association<T> hasOne(BaseFactory<T, ? extends Faker> factory) {
         new Association<>(factory)
     }
 
-    def <T> Association<T> hasOne(Map<String, ? extends Object> args, Class<? extends BaseFactory<T, ? extends Faker>> factoryClass) {
+    /**
+     * Defines a relationship with a single object.
+     *
+     * @param options A map containing options for the relationship. Possible options:
+     * <ul>
+     *     <li>default : {@link Closure} - A closure which yields the default object to be used.</li>
+     *     <li>overrides : {@link Map}|{@link Closure} - A map of default overrides, or a closure yielding the default overrides.
+     *     Combined with the user specified overrides, they form the overrides given to the factory. If this relationship is evaluated after the main
+     *     object, the closure is called with the created owner.</li>
+     *     <li>traits : {@link List} - A list of names of traits to apply by default</li>
+     *     <li>afterBuild : {@link Boolean} - Determines if this relationship is evaluated before the object is constructed, or after
+     *     it is created. Defaults to false.</li>
+     * </ul>
+     * @param factoryClass The type of the factory which should be used to generate the related object.
+     * @return An association capable of generating the related object.
+     */
+    def <T> Association<T> hasOne(Map<String, ? extends Object> options, Class<? extends BaseFactory<T, ? extends Faker>> factoryClass) {
         Association<T> association = new Association(factoryClass)
-        parseHasOneArgs(association, args)
+        parseHasOneOptions(association, options)
         association
     }
 
-    def <T> Association<T> hasOne(Map<String, ? extends Object> args, BaseFactory<T, ? extends Faker> factory) {
+    /**
+     * Defines a relationship with a single object.
+     *
+     * @param options A map containing options for the relationship. Possible options:
+     * <ul>
+     *     <li>default : {@link Closure} - A closure which yields the default object to be used.</li>
+     *     <li>overrides : {@link Map}|{@link Closure} - A map of default overrides, or a closure yielding the default overrides.
+     *     Combined with the user specified overrides, they form the overrides given to the factory. If this relationship is evaluated after the main
+     *     object, the closure is called with the created owner.</li>
+     *     <li>traits : {@link List} - A list of names of traits to apply by default</li>
+     *     <li>afterBuild : {@link Boolean} - Determines if this relationship is evaluated before the object is constructed, or after
+     *     it is created. Defaults to false.</li>
+     * </ul>
+     * @param factory The factory which should be used to generate the related object.
+     * @return An association capable of generating the related object.
+     */
+    def <T> Association<T> hasOne(Map<String, ? extends Object> options, BaseFactory<T, ? extends Faker> factory) {
         Association<T> association = new Association(factory)
-        parseHasOneArgs(association, args)
+        parseHasOneOptions(association, options)
         association
     }
 
+    /**
+     * Defines a relationship with multiple objects.
+     *
+     * @param factoryClass The type of the factory which should be used to generate the related objects.
+     * @return An association capable of generating the related objects.
+     */
     def <T> ManyAssociation<T> hasMany(Class<? extends BaseFactory<T, ? extends Faker>> factoryClass) {
         new ManyAssociation(factoryClass)
     }
 
+    /**
+     * Defines a relationship with multiple objects.
+     *
+     * @param factory The factory which should be used to generate the related objects.
+     * @return An association capable of generating the related objects.
+     */
     def <T> ManyAssociation<T> hasMany(BaseFactory<T, ? extends Faker> factory) {
         new ManyAssociation(factory)
     }
 
-    // Special version for groovy syntax
-    def <T> ManyAssociation<T> hasMany(Map<String, ? extends Object> args, Class<? extends BaseFactory<T, ? extends Faker>> factoryClass) {
+    /**
+     * Defines a relationship with multiple objects.
+     *
+     * @param options A map containing options for the relationship. Possible options:
+     * <ul>
+     *     <li>overrides : {@link List} - A list containing overrides (maps) or the related objects which should be used by the factory.</li>
+     *     <li>generalOverrides : {@link Map}|{@link Closure} - A map of default overrides, or a closure yielding the default overrides.
+     *     Combined with the user specified overrides, they form the overrides given to the factory. If this relationship is evaluated after the main
+     *     object, the closure is called with the created owner.</li>
+     *     <li>traits : {@link List} - A list of names of traits to apply by default</li>
+     *     <li>afterBuild : {@link Boolean} - Determines if this relationship is evaluated before the object is constructed, or after
+     *     it is created. Defaults to false.</li>
+     *     <li>amount : {@link Integer} - The number of related objects to generate, if no other amount or list of overrides is specified.</li>
+     *     <li>transform : {@link Closure} - A closure which gets the generated list of related objects and returns a transformed collection.
+     *     This can be useful if the final collection should not be a list but any other type, like a set.</li>
+     * </ul>
+     * @param factoryClass The type of the factory which should be used to generate the related objects.
+     * @return An association capable of generating the related objects.
+     */
+    def <T> ManyAssociation<T> hasMany(Map<String, ? extends Object> options, Class<? extends BaseFactory<T, ? extends Faker>> factoryClass) {
         def association = new ManyAssociation(factoryClass)
-        parseHasManyArgs(association, args)
+        parseHasManyOptions(association, options)
         association
     }
 
-    // Special version for groovy syntax
-    def <T> ManyAssociation<T> hasMany(Map<String, ? extends Object> args, BaseFactory<T, ? extends Faker> factory) {
+    /**
+     * Defines a relationship with multiple objects.
+     *
+     * @param options A map containing options for the relationship. Possible options:
+     * <ul>
+     *     <li>overrides : {@link List} - A list containing overrides (maps) or the related objects which should be used by the factory.</li>
+     *     <li>generalOverrides : {@link Map}|{@link Closure} - A map of default overrides, or a closure yielding the default overrides.
+     *     Combined with the user specified overrides, they form the overrides given to the factory. If this relationship is evaluated after the main
+     *     object, the closure is called with the created owner.</li>
+     *     <li>traits : {@link List} - A list of names of traits to apply by default</li>
+     *     <li>afterBuild : {@link Boolean} - Determines if this relationship is evaluated before the object is constructed, or after
+     *     it is created. Defaults to false.</li>
+     *     <li>amount : {@link Integer} - The number of related objects to generate, if no other amount or list of overrides is specified.</li>
+     *     <li>transform : {@link Closure} - A closure which gets the generated list of related objects and returns a transformed collection.
+     *     This can be useful if the final collection should not be a list but any other type, like a set.</li>
+     * </ul>
+     * @param factory The factory which should be used to generate the related objects.
+     * @return An association capable of generating the related objects.
+     */
+    def <T> ManyAssociation<T> hasMany(Map<String, ? extends Object> options, BaseFactory<T, ? extends Faker> factory) {
         def association = new ManyAssociation(factory)
-        parseHasManyArgs(association, args)
+        parseHasManyOptions(association, options)
         association
     }
 
-    private def parseHasOneArgs(Association association, Map<String, ? extends Object> args) {
+    private def parseHasOneOptions(Association association, Map<String, ? extends Object> args) {
         association.defaultObjectProducer = args['default'] as Closure
         def defaultOverrides = args['overrides']
         if (defaultOverrides instanceof Closure) {
@@ -74,7 +169,7 @@ trait FactoryDSL {
         association.afterBuild = (args['afterBuild'] ?: false) as boolean
     }
 
-    private def parseHasManyArgs(ManyAssociation association, Map<String, ? extends Object> args) {
+    private def parseHasManyOptions(ManyAssociation association, Map<String, ? extends Object> args) {
         association.overrides = args['overrides'] as List
         def generalOverrides = args['generalOverrides']
         if (generalOverrides instanceof Closure) {
