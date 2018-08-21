@@ -52,7 +52,7 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
         if (object instanceof Map) {
             build(object as Map, [])
         } else {
-            persist(finalize(object, null), FactoryManager.instance.currentContext)
+            persist(object, FactoryManager.instance.currentContext)
         }
     }
 
