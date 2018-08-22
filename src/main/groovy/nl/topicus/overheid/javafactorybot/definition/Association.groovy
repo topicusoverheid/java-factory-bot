@@ -46,7 +46,7 @@ class Association<T> extends AbstractFactoryAttribute<T> implements Attribute{
             getFactory().build(defaultObjectProducer())
         } else {
             // Default build
-            getFactory().build()
+            traits ? getFactory().build(traits) : getFactory().build()
         }
     }
 
