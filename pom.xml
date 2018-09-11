@@ -6,7 +6,7 @@
 
     <groupId>nl.topicus.overheid</groupId>
     <artifactId>java-factory-bot</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <packaging>jar</packaging>
 
     <name>java-factory-bot</name>
@@ -48,6 +48,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compile.encoding>UTF-8</maven.compile.encoding>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <gpg.keyname>3BFDF857</gpg.keyname>
 
         <!-- Dependency versions -->
         <gmavenplus-plugin.version>1.5</gmavenplus-plugin.version>

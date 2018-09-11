@@ -1,7 +1,6 @@
 package nl.topicus.overheid.javafactorybot
 
 import com.github.javafaker.Faker
-import nl.topicus.overheid.javafactorybot.definition.Attribute
 import nl.topicus.overheid.javafactorybot.definition.Definition
 import nl.topicus.overheid.javafactorybot.exception.TraitNotFoundException
 
@@ -11,8 +10,8 @@ import java.lang.reflect.ParameterizedType
  * A factory is a special class which is able to generate new valid objects, for testing purposes.
  * These objects can be randomized by using a faker.
  *
- * @param < M >           The type of the generated object
- * @param < F >           The type of the faker of this factory. This allows to override the faker with a custom implementation.
+ * @param < M >                      The type of the generated object
+ * @param < F >                      The type of the faker of this factory. This allows to override the faker with a custom implementation.
  */
 abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     /**
@@ -40,18 +39,6 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     }
 
     /**
-     * Returns a map of attributes and relations based on the specified default attribute, default relations and build parameters.
-     *
-     * @param overrides The overrides specified to override default attributes and/or relations.
-     * @param traits A list of traits to apply.
-     * @return A map of attributes which can be used to create a new instance.
-     */
-    Map<String, Object> buildAttributes(Map<String, Object> overrides, List<String> traits = null) {
-        Evaluator evaluator = new Evaluator(this, compileAttributes(traits), overrides)
-        applyAfterAttributesHooks(evaluator.attributes())
-    }
-
-    /**
      * Returns the passed object.
      * <p>
      * This method exists so it is possible to completely override a relation by passing your own instance, or null.
@@ -65,7 +52,7 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
         if (object instanceof Map) {
             build(object as Map, [])
         } else {
-            createIfInContext(applyAfterBuildHooks(object))
+            persist(object, FactoryManager.instance.currentContext)
         }
     }
 
@@ -73,7 +60,7 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      * Returns a new instance that is not saved.
      * <p>
      * In normal usage, this method should not be overriden. If you want to change how the object is built, use
-     * {@link #onAfterBuild} or {@link #internalBuild}.
+     * {@link #onAfterBuild} or {@link #construct}.
      *
      * @return The new instance.
      */
@@ -85,7 +72,7 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      * Returns a new instance that is not saved.
      * <p>
      * In normal usage, this method should not be overriden. If you want to change how the object is built, use
-     * {@link #onAfterBuild} or {@link #internalBuild}.
+     * {@link #onAfterBuild} or {@link #construct}.
      *
      * @param overrides Additional overrides to use when building a new object.
      * Build parameters allow to define custom values for attributes and relations.
@@ -94,15 +81,26 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      * @return The new instance.
      */
     M build(Map<String, Object> overrides, List<String> traits = null) {
-        M object = internalBuild(buildAttributes(overrides, traits))
-        createIfInContext(applyAfterBuildHooks(object, traits))
+        def evaluator = new Evaluator(this, traits, overrides)
+        combine(
+                persist(
+                        finalize(
+                                construct(
+                                        initialize(evaluator)
+                                ),
+                                evaluator
+                        ),
+                        FactoryManager.instance.currentContext
+                ),
+                evaluator
+        )
     }
 
     /**
      * Returns a new instance that is not saved.
      * <p>
      * In normal usage, this method should not be overriden. If you want to change how the object is built, use
-     * {@link #onAfterBuild} or {@link #internalBuild}.
+     * {@link #onAfterBuild} or {@link #construct}.
      *
      * @param traits A list of traits to apply to new object. A trait is basically a collection of attribute/relation
      * updates, meant to create an object representing a certain state. The possible traits are specified in the factory.
@@ -116,7 +114,7 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
      * Returns a new instance that is not saved.
      * <p>
      * In normal usage, this method should not be overriden. If you want to change how the object is built, use
-     * {@link #onAfterBuild} or {@link #internalBuild}.
+     * {@link #onAfterBuild} or {@link #construct}.
      *
      * @param traits An array of traits to apply to new object. A trait is basically a collection of attribute/relation
      * updates, meant to create an object representing a certain state. The possible traits are specified in the factory.
@@ -245,54 +243,75 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
         doInCreateContext { buildList(overrides) }
     }
 
+    // Build process steps down here
+
     /**
-     * Actual builder of the object, which creates the instance using the computed attributes.
+     * First step of the build process. Takes the evaluator containing the factory and user specified overrides, and
+     * outputs a map of attribute names to values which should be used to construct the object.
+     *
+     * In this step, all onAfterAttribute hooks are called.
+     *
+     * @param evaluator The evaluator to use in this step.
+     * @return A map containing values of attributes to be used for constructing the boject.
+     */
+    protected Map<String, Object> initialize(Evaluator evaluator) {
+        applyAfterAttributesHooks(evaluator.evaluateForInitialize(), evaluator.traits)
+    }
+
+    /**
+     * Second step of build process. Actual builder of the object, which creates the instance using the computed attribute values
+     * from the first step {@link #initialize(nl.topicus.overheid.javafactorybot.Evaluator)}.
+     *
      * This method is not used when {@link #build(M)} is called.
      *
-     * @param attributes The computed attributes of the object
+     * @param attributes The computed attribute values of the object
      * @return A object with the values from the given attributes
      */
-    protected M internalBuild(Map attributes) {
+    protected M construct(Map attributes) {
         getObjectType().newInstance(attributes)
     }
 
     /**
-     * Callback which will persist the object, given the current context specifies the persist strategy. This method
-     * is called after the object is completely build, just after {@link BaseFactory#onAfterBuild(java.lang.Object)}.
+     * Third step of the build process. After the object is constructed, it is time for some fine-tuning before the object is
+     * persisted (if we are creating the object) or returned as result.
      *
-     * @param object The built object. Can be null
-     * @param context The context which should be used to persist the object.
-     * @return The persisted object.
+     * In this step, all onAfterBuild hooks are called.
+     *
+     * @param object The result of the second step ({@link #construct(java.util.Map)}
+     * @param evaluator The evalutor to use in this step.
+     * @return An object which is ready to be persisted or returned as result.
      */
-    protected M internalCreate(M object, FactoryContext context) {
-        if (object) context.persist(object) else object
+    protected M finalize(M object, Evaluator evaluator) {
+        applyAfterBuildHooks(object, evaluator?.traits)
+    }
+
+    /**
+     * Fourth step of the build process. If the object is build within a create context, this step will persist the object
+     * to the data store. Otherwise, this step does nothing.
+     *
+     * @param object The object which should be persisted. Can be null
+     * @param context The context which should be used to persist the object.
+     * @return The persisted object of the same object.
+     */
+    protected M persist(M object, FactoryContext context = null) {
+        (context != null && object != null) ? context.persist(object) : object
+    }
+
+    /**
+     * The fifth step of the build process. Some attribute values can only be created after the owner object is build. In this step,
+     * these attributes are evaluated and combined with the object.
+     *
+     * @param object The build (and persisted) object
+     * @param evaluator The evalutor to use in this step.
+     * @return The object with additional attributes .
+     */
+    protected M combine(M object, Evaluator evaluator) {
+        Map<String, Object> attrs = evaluator.evaluateForFinalize(object)
+        attrs.each { key, value -> object."$key" = value }
+        object
     }
 
     // Private methods down here
-
-    /**
-     * If create context is active, persist object. Otherwise, use unpersisted object.
-     */
-    private M createIfInContext(M object) {
-        def context = FactoryManager.instance.currentContext
-        context == null ? object : applyAfterCreateHooks(internalCreate(object, context))
-    }
-
-    /**
-     * Compile the list of traits into the base attributes
-     *
-     * @param traits List of traits to apply, can be null or empty.
-     * @return A map of attributes including attributes from the traits.
-     */
-    private Map<String, Attribute> compileAttributes(List<String> traits) {
-        if (traits != null && !traits.isEmpty()) {
-            traits.inject(attributes, { Map attributes, String traitName ->
-                attributes + findTrait(traitName).attributes
-            }) as Map<String, Attribute>
-        } else {
-            attributes
-        }
-    }
 
     /**
      * Find a trait by name, and throw an exception if a trait with that name does not exist.
@@ -318,15 +337,6 @@ abstract class BaseFactory<M, F extends Faker> extends Definition<M> {
     private M applyAfterBuildHooks(M object, List<String> traits = null) {
         onAfterBuild(object)
         if (traits) traits.each { findTrait(it).onAfterBuild(object) }
-        object
-    }
-
-    /**
-     * Apply all 'afterCreate' hooks from factory and possible traits.
-     */
-    private M applyAfterCreateHooks(M object, List<String> traits = null) {
-        onAfterCreate(object)
-        if (traits) traits.each { findTrait(it).onAfterCreate(object) }
         object
     }
 
