@@ -78,7 +78,7 @@ Add the following to your dependencies:
     <dependency>
         <groupId>nl.topicus.overheid</groupId>
         <artifactId>java-factory-bot</artifactId>
-        <version>0.2.0-SNAPSHOT</version>
+        <version>0.2.0</version>
         <scope>test</scope>
     </dependency>
 
@@ -86,7 +86,7 @@ Add the following to your dependencies:
 
 Add the following line to the dependency section of `build.gradle`
 
-    compile "nl.topicus.overheid:java-factory-bot:0.2.0-SNAPSHOT"
+    compile "nl.topicus.overheid:java-factory-bot:0.2.0"
 
 ## Building
 
