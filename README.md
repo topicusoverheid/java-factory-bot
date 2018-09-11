@@ -37,19 +37,19 @@ we can define factories like
 ```groovy
 class ArticleFactory extends Factory<Article> {
     Map<String, Attribute> attributes = [
-            title       : attribute { faker.lorem().sentence() },
-            content     : attribute { faker.lorem().paragraph() },
-            creationDate: attribute { faker.date().past(20, TimeUnit.DAYS) },
+            title       : value { faker.lorem().sentence() },
+            content     : value { faker.lorem().paragraph() },
+            creationDate: value { faker.date().past(20, TimeUnit.DAYS) },
             author      : hasOne(UserFactory)
     ]
 }
 
 class UserFactory extends Factory<User> {
     Map<String, Attribute> attributes = [
-            username : attribute { faker.name().username() },
-            firstName: attribute { faker.name().firstName() },
-            lastName : attribute { faker.name().lastName() },
-            email    : attribute { "${get("firstName")}.${get("lastName")}@example.com" }
+            username : value { faker.name().username() },
+            firstName: value { faker.name().firstName() },
+            lastName : value { faker.name().lastName() },
+            email    : value { "${get("firstName")}.${get("lastName")}@example.com" }
     ]
 }
 ```
@@ -67,7 +67,7 @@ by passing them in a map:
 Article article = new ArticleFactory().build([title: "Foo", user: [username: "johndoe"]])
 ```
 
-For documentation, view the [wiki](https://github.com/topicusoverheid/java-factory-bot/wiki).
+For documentation and more examples, visit the [wiki](https://github.com/topicusoverheid/java-factory-bot/wiki).
 
 ## Installation
 
@@ -78,7 +78,7 @@ Add the following to your dependencies:
     <dependency>
         <groupId>nl.topicus.overheid</groupId>
         <artifactId>java-factory-bot</artifactId>
-        <version>0.1.0</version>
+        <version>0.2.0-SNAPSHOT</version>
         <scope>test</scope>
     </dependency>
 
@@ -86,7 +86,7 @@ Add the following to your dependencies:
 
 Add the following line to the dependency section of `build.gradle`
 
-    compile "nl.topicus.overheid:java-factory-bot:0.1.0"
+    compile "nl.topicus.overheid:java-factory-bot:0.2.0-SNAPSHOT"
 
 ## Building
 
